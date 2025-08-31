@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Nutrition & Food — Gymso</title>
+
+  <!-- ZXing for barcode scanning + html2canvas/jsPDF for existing PDF/label features -->
+  <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+
+  <style>
+    /* ====== GYMSO THEME ====== */
+    :root{
+      --bg:#171819;
+      --panel:rgba(255,255,255,.035);
+      --panel-solid:#1b1c1e;
+      --border:rgba(255,255,255,.08);
+      --ink:#ffffff;
+      --muted:#c9c9c9;
+      --primary:#e02121;
+      --primary-ink:#ffffff;
+      --ring:rgba(224,33,33,.45);
+      --radius:16px;
+      --radius-sm:12px;
+      --elev-1: 0 14px 40px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.02);
+    }
+
+    html, body { height: 100%; }
+    *{ box-sizing: border-box }
+    body{
+      margin:0; color:var(--ink);
+      font: 16px/1.45 Inter, "Open Sans", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial;
+      background: var(--bg);
+      -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+      background-image:
+        radial-gradient(1000px 600px at 120% -10%, rgba(224,33,33,.08), transparent 60%),
+        radial-gradient(800px 500px at -10% 10%, rgba(255,255,255,.04), transparent 60%);
+      background-attachment: fixed;
+      padding: 28px 18px;
+    }
+
+    .container{
+      max-width: 1100px; margin: 0 auto;
+      backdrop-filter: blur(10px) saturate(115%);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--elev-1);
+      overflow: hidden;
+      position: relative;
+      padding: 22px 18px 18px;
+    }
+    .container::before{
+      content:""; position:absolute; inset:0 0 auto 0; height:3px;
+      background:linear-gradient(90deg, rgba(224,33,33,1), rgba(224,33,33,.6));
+      filter: drop-shadow(0 0 10px rgba(224,33,33,.55));
+    }
+
+    /* Title (match Workout Splits look) */
+    header{ margin:0 0 6px }
+    header h1{
+      margin: 0 0 6px;
+      font-size: clamp(22px, 3vw, 30px);
+      letter-spacing:.2px; font-weight:800; color:#fff; text-align:center;
+      display:flex; gap:10px; justify-content:center; align-items:center;
+    }
+    header h1 .dot{
+      width:12px; height:12px; border-radius:50%;
+      background:radial-gradient(circle at 35% 35%, #fff, #e87a7a 55%, transparent 65%);
+      box-shadow:0 0 18px rgba(224,33,33,.65), inset 0 0 6px rgba(255,255,255,.35);
+    }
+    header p{ margin:0; text-align:center; color:var(--muted) }
+
+    /* Toolbar */
+    .toolbar{
+      display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:center;
+      margin: 8px 0 8px;
+    }
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center; gap:8px;
+      border:1px solid #000; background:#111214; color:#fff;
+      border-radius:12px; padding:10px 14px; font-weight:800; cursor:pointer; transition:.2s;
+      box-shadow:0 6px 16px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.05);
+      font-size:14px;
+    }
+    .btn:hover{
+      background:linear-gradient(135deg, #e02121, #b01a1a);
+      border-color:#e02121; transform:translateY(-1px);
+      box-shadow:0 12px 28px rgba(224,33,33,.35);
+    }
+    .btn.secondary{
+      background:rgba(255,255,255,.04); border:1px solid var(--border); color:#f0f0f0;
+    }
+    .btn.secondary:hover{ color:#fff }
+
+    .tabs{
+      display:grid; grid-template-columns: repeat(2, minmax(0,1fr));
+      gap:10px; margin: 10px 0 8px;
+    }
+    .tab{
+      border:1px solid var(--border); color:#f0f0f0; background:rgba(255,255,255,.02);
+      border-radius:999px; padding:10px 14px; font-weight:800; font-size:14px; text-align:center;
+      transition:.2s; cursor:pointer;
+    }
+    .tab:hover{ border-color:rgba(224,33,33,.6); color:#fff; box-shadow:0 8px 24px rgba(224,33,33,.18) }
+    .tab[aria-selected="true"]{
+      color:var(--primary-ink); border-color:transparent;
+      background: linear-gradient(135deg, #e02121 0%, #a21515 100%);
+      box-shadow:0 10px 30px rgba(224,33,33,.35);
+    }
+
+    .panel{ display:none; animation: fade .25s ease-out; }
+    .panel.active{ display:block }
+    @keyframes fade{ from{opacity:.6; transform:translateY(4px)} to{opacity:1; transform:none} }
+
+    /* Inputs / Cards */
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .field{
+      flex: 1 1 280px; min-width: 220px;
+      padding:12px 14px;border-radius:999px;border:1px solid var(--border);
+      background: rgba(255,255,255,.04); color:#fff; font-size:14px; outline:none;
+    }
+    .switch{width:52px;height:26px;background:#2b2d31;border-radius:999px;position:relative;cursor:pointer;transition:.2s;border:1px solid var(--border)}
+    .switch .dot{width:22px;height:22px;background:#fff;position:absolute;top:1.5px;left:1.5px;border-radius:50%;transition:transform .25s}
+    .switch.active{background:var(--primary);border-color:var(--primary)} .switch.active .dot{transform:translateX(26px)}
+    .muted{ color:var(--muted) }
+
+    .comparison{display:flex;gap:16px;margin-top:14px;flex-wrap:wrap}
+    .card{
+      flex:1 1 340px;border:1px solid var(--border);border-radius:12px;
+      background:rgba(255,255,255,.03); padding:16px; position:relative; color:#fff;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
+    }
+    .card h3{margin:0 0 6px}
+    .card .actions{position:absolute;top:12px;right:12px;display:flex;gap:8px}
+    .chip-sm{border:1px solid var(--border);background:rgba(255,255,255,.04);color:#fff;padding:6px 10px;border-radius:999px;cursor:pointer;font-weight:800;font-size:12px}
+    .chip-sm.active{background:linear-gradient(135deg,#e02121,#b01a1a);border-color:#e02121}
+    .portion{margin:10px 0 6px}
+    .portion input[type="range"]{width:100%}
+
+    .panel.white{
+      margin-top:16px; padding:16px; border:1px dashed var(--border); border-radius:12px;
+      background: rgba(255,255,255,.03);
+    }
+
+    .hidden{ display:none !important }
+
+    /* ===== PRINT SHEET (for html2canvas + jsPDF) ===== */
+    .print-sheet{
+      width: 1000px; max-width:1000px; background:#fff; color:#0f1115;
+      margin:0; padding:0; border:0; box-shadow:none;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+    .print-head{ border-radius:0; background:#fff; padding:12px 16px; position:relative; border-bottom:1px solid #f1f1f1 }
+    .print-head::before{ content:""; position:absolute; inset:0 0 auto 0; height:8px; background: linear-gradient(90deg,#e02121,#ffa4a4); filter: drop-shadow(0 4px 12px rgba(224,33,33,.35)) }
+    .print-title{ font-size:28px; font-weight:900; margin:10px 0 4px; text-transform:capitalize; letter-spacing:.4px }
+    .print-sub{ color:#6a7280; margin:0 0 8px }
+    .print-body{ border:0; border-radius:0; padding:16px; min-height:320px; background:#fff }
+    .print-grid{ display:grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap:14px }
+    .print-card{ border:1px solid #f3f3f3; border-radius:12px; padding:14px; background:#fff }
+    .print-footer{ color:#8a8f99; font-size:12px; margin:8px 16px 14px }
+    .badge{ display:inline-block; padding:8px 14px; border-radius:999px; font-size:12px; font-weight:900; background:linear-gradient(135deg,#e02121,#b01a1a); color:#fff; box-shadow:0 8px 22px rgba(224,33,33,.28) }
+    .print-sheet .n-table{ width:100%; border-collapse:collapse; margin:10px 0 6px; background:#fff; color:#0f1115; border:1px solid #ececec; border-radius:10px; overflow:hidden }
+    .print-sheet .n-table th, .print-sheet .n-table td{ padding:10px 12px; border-bottom:1px solid #f0f0f0; font-size:14px }
+    .print-sheet .n-table th{ text-transform:uppercase; letter-spacing:.4px; font-weight:800; background:#fafafa }
+    .print-sheet .n-badge{ display:inline-block; background:linear-gradient(135deg,#e02121,#b01a1a); color:#fff; font-weight:800; border-radius:999px; padding:8px 14px; font-size:12px; margin:8px 0 6px; box-shadow:0 8px 22px rgba(224,33,33,.28) }
+    .print-sheet .n-portion{ color:#6a7280; font-weight:800; margin:4px 0 8px }
+
+    /* ===== Barcode scanning overlay ===== */
+    #scanSheet{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.92); z-index:9999; align-items:center; justify-content:center; flex-direction:column; padding:12px }
+    #scanSheet video{ width:min(520px, 96vw); border-radius:12px; border:2px solid rgba(255,255,255,.2) }
+    #scanClose{ margin-top:10px }
+    #scanResult{ color:#fff; margin:8px 0 0; text-align:center; max-width:min(520px,96vw) }
+    #scanHint{ color:#c9c9c9; font-size:13px; margin-top:6px; text-align:center }
+    @media (max-width: 640px){ .tabs{ grid-template-columns: 1fr } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1><span class="dot"></span> Nutrition & Food</h1>
+      <p class="muted">Gymso styled • USDA lookup • PDF exports</p>
+    </header>
+
+    <div class="toolbar" role="toolbar" aria-label="Page tools">
+      <button class="btn secondary" id="exportNutritionBtn" type="button">Export Nutrition PDF</button>
+      <button class="btn secondary" id="exportRecipeBtn" type="button">Export Recipe PDF</button>
+      <!-- Scanner button is now ALWAYS visible -->
+      <button class="btn" id="scanBtn" type="button" title="Use your camera to scan UPC/EAN">📷 Scan Barcode</button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs" role="tablist" aria-label="Modes">
+      <button class="tab" role="tab" id="tab-nutri" aria-selected="true" aria-controls="panel-nutri" data-panel="#panel-nutri">Nutrition</button>
+      <button class="tab" role="tab" id="tab-recipe" aria-selected="false" aria-controls="panel-recipe" data-panel="#panel-recipe">Recipe</button>
+    </div>
+
+    <!-- ========== NUTRITION ========== -->
+    <section id="panel-nutri" class="panel active" role="tabpanel" aria-labelledby="tab-nutri">
+      <div class="row">
+        <input class="field" id="foodInput1" placeholder="Food #1 (e.g., apple, spinach, banana or scan a UPC)" />
+        <button class="btn" onclick="addSecondItem()">+ Compare</button>
+      </div>
+
+      <div class="row" style="margin:10px 0 12px">
+        <div class="row" style="gap:8px;align-items:center">
+          <div id="brandToggle1" class="switch" onclick="toggleBrandInput(1)" role="switch" aria-checked="false" tabindex="0"><div class="dot"></div></div>
+          <span class="muted">Use branded foods for #1</span>
+        </div>
+        <input class="field" id="brandNameInput1" placeholder="Brand name (e.g., Kroger, Great Value)" style="display:none; max-width:320px">
+      </div>
+
+      <div id="secondItem" class="hidden">
+        <div class="row">
+          <input class="field" id="foodInput2" placeholder="Food #2 (e.g., banana, oats, milk)" />
+        </div>
+        <div class="row" style="margin:10px 0 12px">
+          <div class="row" style="gap:8px;align-items:center">
+            <div id="brandToggle2" class="switch" onclick="toggleBrandInput(2)" role="switch" aria-checked="false" tabindex="0"><div class="dot"></div></div>
+            <span class="muted">Use branded foods for #2</span>
+          </div>
+          <input class="field" id="brandNameInput2" placeholder="Brand name (e.g., Great Value)" style="display:none; max-width:320px">
+        </div>
+      </div>
+
+      <div class="row" style="margin:10px 0 6px">
+        <button class="btn" onclick="fetchNutrition()">Get Nutrition Info</button>
+      </div>
+
+      <div id="nutritionResult" style="margin-top:12px"></div>
+    </section>
+
+    <!-- ========== RECIPE ========== -->
+    <section id="panel-recipe" class="panel" role="tabpanel" aria-labelledby="tab-recipe" aria-live="polite">
+      <div class="row">
+        <textarea id="ingredientsInput" class="field" rows="3" style="border-radius:12px;width:100%;min-height:110px" placeholder="Recipe name or ingredients (e.g., chicken rice bowl)"></textarea>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <button class="btn" onclick="generatePlan()">Generate Recipe</button>
+        <button class="btn secondary" onclick="document.getElementById('ingredientsInput').value=''">Clear</button>
+      </div>
+      <div id="recipe" style="margin-top:14px" class="card"></div>
+    </section>
+  </div>
+
+  <!-- Barcode scanning overlay -->
+  <div id="scanSheet" role="dialog" aria-modal="true" aria-label="Scan barcode">
+    <video id="scanVideo" playsinline muted></video>
+    <div id="scanHint">Point the camera at a UPC/EAN barcode. It will auto-detect and fill the first field.</div>
+    <div id="scanResult" class="muted"></div>
+    <button id="scanClose" class="btn secondary">Close</button>
+  </div>
+
+  <script>
+    /* ===== Tabs ===== */
+    (function(){
+      const tabs=[...document.querySelectorAll('.tab')];
+      const panels=[...document.querySelectorAll('.panel')];
+      function setActive(id){
+        tabs.forEach(t=>t.setAttribute('aria-selected', String(t.getAttribute('aria-controls')===id)));
+        panels.forEach(p=>p.classList.toggle('active', p.id===id));
+        const nutActive = id==='panel-nutri';
+        document.getElementById('exportNutritionBtn').style.display = nutActive ? 'inline-flex' : 'none';
+        document.getElementById('exportRecipeBtn').style.display = nutActive ? 'none' : 'inline-flex';
+      }
+      tabs.forEach(t=>{
+        t.addEventListener('click', ()=>setActive(t.getAttribute('aria-controls')));
+        t.addEventListener('keydown', (e)=>{ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); setActive(t.getAttribute('aria-controls')); }});
+      });
+      setActive('panel-nutri');
+    })();
+
+    /* ===== USDA FDC + UI ===== */
+    let isBrandSearchEnabled1=false, isBrandSearchEnabled2=false, isSecondItemAdded=false;
+    const apiKey="U96EXCELPlpuF6xzVe7lvsaXRi51PXJHymBOIaUu"; // proxy in prod
+
+    function toggleBrandInput(i){
+      const sw=document.getElementById(`brandToggle${i}`), inp=document.getElementById(`brandNameInput${i}`);
+      const on=!sw.classList.contains('active'); sw.classList.toggle('active',on); sw.setAttribute('aria-checked',on?'true':'false');
+      inp.style.display=on?'block':'none'; if(i===1) isBrandSearchEnabled1=on; else isBrandSearchEnabled2=on;
+    }
+    function addSecondItem(){ document.getElementById('secondItem').classList.remove('hidden'); isSecondItemAdded=true; }
+
+    const DV = {
+      'Energy': {val:2000, unit:'kcal'},
+      'Total lipid (fat)': {val:78, unit:'g'},
+      'Fatty acids, total saturated': {val:20, unit:'g'},
+      'Cholesterol': {val:300, unit:'mg'},
+      'Sodium, Na': {val:2300, unit:'mg'},
+      'Carbohydrate, by difference': {val:275, unit:'g'},
+      'Fiber, total dietary': {val:28, unit:'g'},
+      'Sugars, added': {val:50, unit:'g'},
+      'Protein': {val:50, unit:'g'}
+    };
+
+    const perGramByCard = {};
+
+    function buildCardHTML(meta, mapPerGram, idx){
+      const base = meta.baseGrams || 100;
+      return `
+        <div class="card" id="card${idx}" data-base="${base}">
+          <div class="actions">
+            <button class="btn secondary" onclick="toggleLabel(${idx})">Nutrition Label</button>
+            <button class="btn secondary" onclick="downloadLabelPng(${idx})">Label PNG</button>
+          </div>
+          <h3>${meta.desc}</h3>
+          <div class="row" style="gap:8px;margin:8px 0">
+            <button class="chip-sm" id="b100-${idx}" onclick="setBasis(${idx}, '100')">per 100 g</button>
+            <button class="chip-sm active" id="bserv-${idx}" onclick="setBasis(${idx}, 'serv')">per serving (${base} g)</button>
+          </div>
+
+          <div class="portion">
+            <strong>Portion:</strong> <span class="portion-val">${base}</span> g
+            <input id="portion${idx}" class="portion-slider" type="range" min="10" max="800" step="5" value="${base}">
+          </div>
+
+          <p><strong>Calories:</strong> <span data-nutrient="Energy" data-unit="kcal" data-prec="0">${Math.round((mapPerGram['Energy']||0)*base)} kcal</span></p>
+          <p><strong>Protein:</strong> <span data-nutrient="Protein" data-unit="g">${((mapPerGram['Protein']||0)*base).toFixed(2)} g</span></p>
+          <p><strong>Carbs:</strong> <span data-nutrient="Carbohydrate, by difference" data-unit="g">${((mapPerGram['Carbohydrate, by difference']||0)*base).toFixed(2)} g</span></p>
+          <p><strong>Fat:</strong> <span data-nutrient="Total lipid (fat)" data-unit="g">${((mapPerGram['Total lipid (fat)']||0)*base).toFixed(2)} g</span></p>
+          <p><strong>Saturated Fat:</strong> <span data-nutrient="Fatty acids, total saturated" data-unit="g">${((mapPerGram['Fatty acids, total saturated']||0)*base).toFixed(2)} g</span></p>
+          <p><strong>Fiber:</strong> <span data-nutrient="Fiber, total dietary" data-unit="g">${((mapPerGram['Fiber, total dietary']||0)*base).toFixed(2)} g</span></p>
+          <p><strong>Total Sugars:</strong> <span data-nutrient="Sugars, total including NLEA" data-unit="g">${((mapPerGram['Sugars, total including NLEA']||0)*base).toFixed(2)} g</span></p>
+          <p><strong>Sodium:</strong> <span data-nutrient="Sodium, Na" data-unit="mg">${Math.round((mapPerGram['Sodium, Na']||0)*base)} mg</span></p>
+
+          <div id="label${idx}" class="nf-wrap hidden" style="background:#fff;border:1px solid #000;max-width:320px;color:#000"></div>
+        </div>
+      `;
+    }
+
+    function wireCardInteractions(idx, baseGrams, mapPerGram){
+      const card=document.getElementById(`card${idx}`);
+      perGramByCard[idx]=mapPerGram;
+
+      const slider=card.querySelector('.portion-slider'), val=card.querySelector('.portion-val');
+      const fields=card.querySelectorAll('[data-nutrient]');
+      function applyGrams(grams){
+        grams=Math.max(1, Math.min(800, grams));
+        slider.value=grams; val.textContent=grams;
+        fields.forEach(span=>{
+          const key=span.dataset.nutrient, unit=span.dataset.unit||'g', prec=Number(span.dataset.prec||2);
+          const perG = mapPerGram[key]||0;
+          const value = perG*grams;
+          span.textContent = (key==='Energy') ? Math.round(value) + ' ' + unit : value.toFixed(prec) + ' ' + unit;
+        });
+        const lab=document.getElementById(`label${idx}`); if(!lab.classList.contains('hidden')) renderLabel(idx);
+      }
+      slider.addEventListener('input', ()=>applyGrams(Number(slider.value)));
+      applyGrams(baseGrams);
+      setBasis(idx,'serv',true);
+    }
+
+    function setBasis(idx, which, noFocus){
+      const card=document.getElementById(`card${idx}`); if(!card) return;
+      const base=Number(card.dataset.base)||100;
+      const slider=card.querySelector('.portion-slider');
+      const b100=document.getElementById(`b100-${idx}`), bserv=document.getElementById(`bserv-${idx}`);
+      if(which==='100'){ b100.classList.add('active'); bserv.classList.remove('active'); slider.value=100; }
+      else { bserv.classList.add('active'); b100.classList.remove('active'); slider.value=base; }
+      slider.dispatchEvent(new Event('input',{bubbles:true}));
+      if(!noFocus) slider.blur();
+    }
+
+    function toggleLabel(idx){
+      const box=document.getElementById(`label${idx}`);
+      if(box.classList.contains('hidden')){ renderLabel(idx); box.classList.remove('hidden'); }
+      else{ box.classList.add('hidden'); }
+    }
+
+    function renderLabel(idx){
+      const perG=perGramByCard[idx]; if(!perG) return;
+      const card=document.getElementById(`card${idx}`), grams=Number(card.querySelector('.portion-val').textContent)||100;
+      const labelEl=document.getElementById(`label${idx}`);
+      const amt=(k)=> (perG[k]||0)*grams;
+      const kcal=Math.round(amt('Energy'));
+      const tf=amt('Total lipid (fat)'), sf=amt('Fatty acids, total saturated');
+      const chol=amt('Cholesterol'), sod=amt('Sodium, Na');
+      const carb=amt('Carbohydrate, by difference'), fib=amt('Fiber, total dietary');
+      const sugarTotal=amt('Sugars, total including NLEA');
+      const prot=amt('Protein');
+      const dvPct=(k,val,unitGuess)=>{
+        const dv=DV[k]; if(!dv||!val) return '—';
+        let v=val; const unit = unitGuess || dv.unit;
+        if(dv.unit==='mg' && unit==='g') v=val*1000;
+        if(dv.unit==='g'  && unit==='mg') v=val/1000;
+        return Math.round((v/dv.val)*100)+'%';
+      };
+      labelEl.innerHTML = `
+        <div style="border-bottom:8px solid #000;padding:6px 10px"><div style="font-size:28px;font-weight:900;line-height:1">Nutrition Facts</div></div>
+        <div style="padding:8px 10px;border-top:1px solid #000">
+          <div style="display:flex;justify-content:space-between;border-top:0;padding:3px 0"><span style="font-weight:800">Serving size</span><span>${grams} g</span></div>
+          <div style="display:flex;justify-content:space-between;border-top:8px solid #000;padding:6px 0"><span style="font-weight:800;font-size:20px">Calories</span><span style="font-weight:800;font-size:20px">${kcal}</span></div>
+          <div style="display:flex;justify-content:space-between;border-top:1px solid #000;padding:3px 0;font-weight:800"><span>% Daily Value*</span><span></span></div>
+          <div style="display:flex;justify-content:space-between;border-top:1px solid #000;padding:3px 0"><span><span style="font-weight:800">Total Fat</span> ${tf.toFixed(1)} g</span><span style="font-weight:800">${dvPct('Total lipid (fat)',tf,'g')}</span></div>
+          <div style="display:flex;justify-content:space-between;border-top:1px solid #000;padding:3px 0 3px 14px"><span>Saturated Fat ${sf.toFixed(1)} g</span><span>${dvPct('Fatty acids, total saturated',sf,'g')}</span></div>
+          <div style="display:flex;justify-content:space-between;border-top:1px solid #000;padding:3px 0"><span><span style="font-weight:800">Cholesterol</span> ${Math.round(chol)} mg</span><span style="font-weight:800">${dvPct('Cholesterol',chol,'mg')}</span></div>
+          <div style="display:flex;justify-content:space-between;border-top:1px solid #000;padding:3px 0"><span><span style="font-weight:800">Sodium</span> ${Math.round(sod)} mg</span><span style="font-weight:800">${dvPct('Sodium, Na',sod,'mg')}</span></div>
+          <div style="display:flex;justify-content:space-between;border-top:1px solid #000;padding:3px 0"><span><span style="font-weight:800">Total Carbohydrate</span> ${carb.toFixed(1)} g</span><span style="font-weight:800">${dvPct('Carbohydrate, by difference',carb,'g')}</span></div>
+          <div style="display:flex;justify-content:space-between;border-top:1px solid #000;padding:3px 0 3px 14px"><span>Dietary Fiber ${fib.toFixed(1)} g</span><span>${dvPct('Fiber, total dietary',fib,'g')}</span></div>
+          <div style="display:flex;justify-content:space-between;border-top:1px solid #000;padding:3px 0 3px 14px"><span>Total Sugars ${sugarTotal.toFixed(1)} g</span><span>—</span></div>
+          <div style="display:flex;justify-content:space-between;border-top:1px solid #000;padding:3px 0"><span><span style="font-weight:800">Protein</span> ${prot.toFixed(1)} g</span><span style="font-weight:800">${dvPct('Protein',prot,'g')}</span></div>
+        </div>
+        <div style="border-top:6px solid #000;padding:6px 10px;font-size:11px;color:#333">*Percent Daily Values are based on a 2,000 calorie diet.</div>
+      `;
+    }
+
+    async function downloadLabelPng(idx){
+      const labelEl=document.getElementById(`label${idx}`);
+      if(labelEl.classList.contains('hidden')){ toggleLabel(idx); await new Promise(r=>setTimeout(r,60)); }
+      else { renderLabel(idx); await new Promise(r=>setTimeout(r,20)); }
+      const canvas = await html2canvas(labelEl, {backgroundColor:'#ffffff', scale:2});
+      const name = `label_${idx}_${tsSlug()}.png`;
+      const link = document.createElement('a'); link.download = name; link.href = canvas.toDataURL('image/png'); link.click();
+    }
+
+    const outEl=document.getElementById('nutritionResult');
+    async function fetchNutrition(){
+      const input1=document.getElementById('foodInput1').value.trim();
+      const brand1=isBrandSearchEnabled1?document.getElementById('brandNameInput1').value.trim():'';
+      const input2=isSecondItemAdded?document.getElementById('foodInput2').value.trim():'';
+      const brand2=(isSecondItemAdded&&isBrandSearchEnabled2)?document.getElementById('brandNameInput2').value.trim():'';
+      outEl.innerHTML='<p class="muted">Loading…</p>';
+      if(!input1 || (isSecondItemAdded && !input2)){ outEl.innerHTML='<p class="muted">Please enter valid food items.</p>'; return; }
+
+      try{
+        const r1=await fetchOne(input1+(brand1?` ${brand1}`:''), isBrandSearchEnabled1);
+        if(!r1){ outEl.innerHTML=`<p>No food found for "${input1}".</p>`; return; }
+
+        let html='<div class="comparison">';
+        html += buildCardHTML({desc:r1.desc, baseGrams:r1.base, fdcId:r1.id}, r1.perGram, 1);
+
+        let r2=null;
+        if(isSecondItemAdded){
+          r2=await fetchOne(input2+(brand2?` ${brand2}`:''), isBrandSearchEnabled2);
+          if(!r2){ outEl.innerHTML=`<p>No food found for "${input2}".</p>`; return; }
+          html += buildCardHTML({desc:r2.desc, baseGrams:r2.base, fdcId:r2.id}, r2.perGram, 2);
+        }
+        html+='</div>'; outEl.innerHTML=html;
+
+        wireCardInteractions(1, r1.base, r1.perGram);
+        if(r2){ wireCardInteractions(2, r2.perGram ? r2.base : 100, r2.perGram || {}); }
+      }catch(err){ console.error(err); outEl.innerHTML='<p class="muted">Error fetching data. Please try again later.</p>'; }
+    }
+
+    async function fetchOne(query, branded){
+      const url=`https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${apiKey}&query=${encodeURIComponent(query)}&dataType=${branded?'Branded':'Foundation'}&pageSize=1`;
+      const s=await fetch(url); const js=await s.json();
+      if(!js.foods || !js.foods.length) return null;
+      const hit=js.foods[0];
+      const d=await fetch(`https://api.nal.usda.gov/fdc/v1/food/${hit.fdcId}?api_key=${apiKey}`).then(r=>r.json());
+      const map={}; (d.foodNutrients||[]).forEach(n=>{ const name=n?.nutrient?.name, amt=n?.amount; if(name!=null && amt!=null) map[name]=amt; });
+      const base=d.servingSize?Number(d.servingSize):100;
+      const perGram={}; Object.keys(map).forEach(k=>{ perGram[k]= map[k]/base; });
+      return { id:hit.fdcId, desc:hit.description, base, perGram };
+    }
+
+    // ===== PRINT helpers =====
+    function tsSlug(){
+      const d=new Date();
+      const pad=n=>String(n).padStart(2,'0');
+      return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+    }
+    function buildPrintSheet({title, subtitle, cards}){
+      const sheet=document.createElement('section');
+      sheet.className='print-sheet';
+      sheet.innerHTML=`
+        <div class="print-head">
+          <div class="print-title">${title}</div>
+          <p class="print-sub">${subtitle||''}</p>
+          <div class="print-body" id="psBody">
+            <div class="print-grid" id="psCards"></div>
+            <div id="psChart" style="display:none; margin-top:12px; justify-content:center"></div>
+          </div>
+          <div class="print-footer">Generated on ${new Date().toLocaleString()}</div>
+        </div>`;
+      document.body.appendChild(sheet);
+      const holder=sheet.querySelector('#psCards');
+      (cards||[]).forEach(c=>holder.appendChild(c));
+      return sheet;
+    }
+    async function exportElementPDF(el, baseName){
+      const { jsPDF } = window.jspdf;
+      const canvas = await html2canvas(el, { backgroundColor:'#ffffff', scale:2, useCORS:true });
+      const imgData = canvas.toDataURL('image/png');
+
+      const pdf = new jsPDF('p', 'pt', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+
+      const ratio = pageWidth / canvas.width;
+      const imgW = pageWidth;
+      const imgH = canvas.height * ratio;
+
+      if(imgH <= pageHeight){
+        pdf.addImage(imgData, 'PNG', 0, 0, imgW, imgH);
+      }else{
+        let sY = 0;
+        const pageCanvas = document.createElement('canvas');
+        const pageCtx = pageCanvas.getContext('2d');
+        const pagePxHeight = Math.floor(pageHeight / ratio);
+
+        while(sY < canvas.height){
+          pageCanvas.width = canvas.width;
+          pageCanvas.height = Math.min(pagePxHeight, canvas.height - sY);
+          pageCtx.drawImage(canvas, 0, sY, canvas.width, pageCanvas.height, 0, 0, canvas.width, pageCanvas.height);
+          const pageImg = pageCanvas.toDataURL('image/png');
+          if(sY>0) pdf.addPage();
+          pdf.addImage(pageImg, 'PNG', 0, 0, imgW, pageCanvas.height * ratio);
+          sY += pageCanvas.height;
+        }
+      }
+      pdf.save(`${baseName.replace(/\.pdf$/,'')}_${tsSlug()}.pdf`);
+    }
+    function readNutritionCard(idx){
+      const card=document.getElementById(`card${idx}`);
+      if(!card) return null;
+
+      const title = card.querySelector('h3')?.textContent.trim() || `Food ${idx}`;
+      const grams = Number(card.querySelector('.portion-val')?.textContent || card.dataset.base || 100);
+      const rowFor = (sel, label) => {
+        const el = card.querySelector(`[data-nutrient="${sel}"]`);
+        return { name: label, value: el ? el.textContent.trim() : '—' };
+      };
+      const rows = [
+        rowFor('Energy','Calories'),
+        rowFor('Protein','Protein'),
+        rowFor('Carbohydrate, by difference','Carbs'),
+        rowFor('Total lipid (fat)','Fat'),
+        rowFor('Fatty acids, total saturated','Saturated Fat'),
+        rowFor('Fiber, total dietary','Fiber'),
+        rowFor('Sugars, total including NLEA','Total Sugars'),
+        rowFor('Sodium, Na','Sodium')
+      ];
+      const basisIsServing = document.getElementById(`bserv-${idx}`)?.classList.contains('active');
+      const basisText = basisIsServing ? `per serving (${grams} g)` : `per 100 g`;
+      return { idx, title, grams, basisText, rows, card };
+    }
+    function buildNutritionPrintCard(snapshot){
+      const wrap=document.createElement('div');
+      wrap.className='print-card';
+      wrap.innerHTML=`
+        <h3 style="margin:0 0 4px">${snapshot.title}</h3>
+        <div class="n-badge">${snapshot.basisText}</div>
+        <div class="n-portion">Portion: <span>${snapshot.grams}</span> g</div>
+        <table class="n-table" role="table">
+          <thead><tr><th>Nutrient</th><th>Amount</th></tr></thead>
+          <tbody>
+            ${snapshot.rows.map(r=>`<tr><td>${r.name}</td><td>${r.value}</td></tr>`).join('')}
+          </tbody>
+        </table>
+        <div class="n-labels"></div>
+      `;
+      return wrap;
+    }
+    async function maybeAttachLabelImage(snapshot, printCard){
+      const labelEl = snapshot.card?.querySelector('[id^="label"]');
+      if(!labelEl || labelEl.classList.contains('hidden')) return;
+      try{
+        const canvas = await html2canvas(labelEl, { backgroundColor:'#ffffff', scale:2 });
+        const img = new Image();
+        img.src = canvas.toDataURL('image/png');
+        img.style.maxWidth='320px'; img.style.height='auto'; img.style.display='block'; img.style.margin='10px 0 0';
+        printCard.querySelector('.n-labels').appendChild(img);
+      }catch(e){}
+    }
+    async function exportNutritionPDF(){
+      const a = readNutritionCard(1);
+      const b = readNutritionCard(2);
+      if(!a && !b){ alert('Nothing to export yet. Fetch at least one food.'); return; }
+      const sheet = buildPrintSheet({ title: 'Nutrition & Food', subtitle:'Per-serving values • Gymso export', cards:[] });
+      const holder = sheet.querySelector('#psCards');
+
+      if(a){ const pcA=buildNutritionPrintCard(a); holder.appendChild(pcA); await maybeAttachLabelImage(a, pcA); }
+      if(b){ const pcB=buildNutritionPrintCard(b); holder.appendChild(pcB); await maybeAttachLabelImage(b, pcB); }
+
+      await exportElementPDF(sheet, 'nutrition');
+      sheet.remove();
+    }
+    async function exportRecipePDF(){
+      const recipeBox=document.getElementById('recipe');
+      const hasContent = recipeBox && recipeBox.textContent.trim().length>0;
+      if(!hasContent){ alert('No recipe content to export yet. Generate a recipe first.'); return; }
+
+      const recipeCard = document.createElement('div');
+      recipeCard.className='print-card';
+      recipeCard.innerHTML = `
+        <h3 style="margin:0 0 4px">Recipe</h3>
+        <div class="badge">Gymso export</div>
+        <div style="border:1px solid #ececec;border-radius:12px;padding:12px;margin-top:10px;background:#fff;color:#111">
+          ${recipeBox.innerHTML}
+        </div>
+      `;
+      const sheet = buildPrintSheet({ title: 'Nutrition & Food', subtitle:'Recipe', cards:[recipeCard] });
+      await exportElementPDF(sheet, 'recipe');
+      sheet.remove();
+    }
+    document.getElementById('exportNutritionBtn').addEventListener('click', exportNutritionPDF);
+    document.getElementById('exportRecipeBtn').addEventListener('click', exportRecipePDF);
+
+    // ===== Recipe (API Ninjas) =====
+    const API_KEY="mc7KexDOgcuaSLtVal/xgQ==kiljJkNixeojdPeU";
+    async function generatePlan(){
+      const q=document.getElementById('ingredientsInput').value.trim(), out=document.getElementById('recipe');
+      if(!q){ alert('Please enter ingredients or a recipe name.'); return; }
+      out.innerHTML='<p class="muted">Loading recipe…</p>';
+      try{
+        const res=await fetch(`https://api.api-ninjas.com/v1/recipe?query=${encodeURIComponent(q)}`,{headers:{'X-Api-Key':API_KEY}});
+        const data=await res.json();
+        if(!Array.isArray(data)||!data.length){ out.innerHTML='<p class="muted">No recipes found.</p>'; return; }
+        const r=data[0];
+        out.innerHTML=`<h3 style="margin:0 0 6px">${r.title}</h3>
+                        <p><strong>Ingredients:</strong><br>${(r.ingredients||'').replace(/\|/g,', ')}</p>
+                        <p><strong>Instructions:</strong><br>${r.instructions||'No instructions provided.'}</p>`;
+      }catch(e){ console.error(e); out.innerHTML='<p class="muted">Error fetching recipe.</p>'; }
+    }
+
+    // Accessibility for switches
+    ['brandToggle1','brandToggle2'].forEach(id=>{
+      const el=document.getElementById(id);
+      el && el.addEventListener('keydown',e=>{ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); el.click(); } });
+    });
+
+    /* ===== Barcode Scanner (always visible; prefers back camera) ===== */
+    (function(){
+      const btn = document.getElementById('scanBtn');
+      const sheet = document.getElementById('scanSheet');
+      const video = document.getElementById('scanVideo');
+      const resultEl = document.getElementById('scanResult');
+      const closeBtn = document.getElementById('scanClose');
+
+      const codeReader = new ZXing.BrowserMultiFormatReader();
+      let scanning = false;
+
+      function httpsOk(){
+        return location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+      }
+
+      async function startScan(){
+        if(!('mediaDevices' in navigator) || !navigator.mediaDevices.getUserMedia){
+          alert('Camera not supported in this browser.');
+          return;
+        }
+        if(!httpsOk()){
+          alert('Camera access requires HTTPS (or localhost). Please host this page over HTTPS.');
+          return;
+        }
+        sheet.style.display='flex';
+        resultEl.textContent = 'Starting camera…';
+        scanning = true;
+
+        try{
+          // Prefer the back camera; fall back automatically
+          const constraints = {
+            video: {
+              facingMode: { ideal: 'environment' },
+              width: { ideal: 1280 },
+              height: { ideal: 720 }
+            },
+            audio: false
+          };
+
+          await codeReader.decodeFromConstraints(constraints, video, (result, err) => {
+            if(result){
+              const text = result.text.trim();
+              resultEl.textContent = 'Detected: ' + text;
+              // Fill input and search as branded
+              document.getElementById('foodInput1').value = text;
+              if(!document.getElementById('brandToggle1').classList.contains('active')) toggleBrandInput(1);
+              fetchNutrition();
+              stopScan();
+            }else if(err && !(err instanceof ZXing.NotFoundException)){
+              // Non-NotFoundException errors are noteworthy
+              resultEl.textContent = 'Scan error: ' + (err.message || err);
+            }
+          });
+        }catch(e){
+          console.error(e);
+          resultEl.textContent = 'Could not start camera. Check permissions.';
+        }
+      }
+
+      function stopScan(){
+        if(!scanning) return;
+        scanning = false;
+        try{ codeReader.reset(); }catch{}
+        sheet.style.display='none';
+        resultEl.textContent = '';
+        if(video && video.srcObject){
+          video.srcObject.getTracks().forEach(t=>t.stop());
+          video.srcObject = null;
+        }
+      }
+
+      btn.addEventListener('click', startScan);
+      closeBtn.addEventListener('click', stopScan);
+      window.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && sheet.style.display==='flex'){ stopScan(); } });
+      sheet.addEventListener('click', (e)=>{
+        const r = sheet.getBoundingClientRect();
+        if(e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom){ stopScan(); }
+      });
+    })();
+
+    // Initial toolbar visibility sync
+    (function syncToolbar(){
+      const nutActive = document.getElementById('panel-nutri').classList.contains('active');
+      document.getElementById('exportNutritionBtn').style.display = nutActive ? 'inline-flex' : 'none';
+      document.getElementById('exportRecipeBtn').style.display = nutActive ? 'none' : 'inline-flex';
+    })();
+  </script>
+</body>
+</html>

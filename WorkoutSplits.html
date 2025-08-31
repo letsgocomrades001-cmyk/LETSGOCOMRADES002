@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Workout Split Plans</title>
+  <style>
+    /* ====== GYMSO THEME ====== */
+    :root{
+      --bg:#171819;
+      --panel:rgba(255,255,255,.035);
+      --panel-solid:#1b1c1e;
+      --border:rgba(255,255,255,.08);
+      --ink:#ffffff;
+      --muted:#c9c9c9;
+      --primary:#e02121;
+      --primary-ink:#ffffff;
+      --ring:rgba(224,33,33,.45);
+      --radius:16px;
+      --radius-sm:12px;
+      --elev-1: 0 14px 40px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.02);
+    }
+
+    html, body { height: 100%; }
+    *{ box-sizing: border-box }
+    body{
+      margin:0; color:var(--ink);
+      font: 16px/1.45 "Open Sans", Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial;
+      background: var(--bg);
+      -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+      background-image:
+        radial-gradient(1000px 600px at 120% -10%, rgba(224,33,33,.08), transparent 60%),
+        radial-gradient(800px 500px at -10% 10%, rgba(255,255,255,.04), transparent 60%);
+      background-attachment: fixed;
+      padding: 28px 18px;
+    }
+
+    .container{
+      max-width: 1100px; margin: 0 auto;
+      backdrop-filter: blur(10px) saturate(115%);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--elev-1);
+      overflow: hidden;
+      position: relative;
+      padding: 22px 18px 18px;
+    }
+    .container::before{
+      content:""; position:absolute; inset:0 0 auto 0; height:3px;
+      background:linear-gradient(90deg, rgba(224,33,33,1), rgba(224,33,33,.6));
+      filter: drop-shadow(0 0 10px rgba(224,33,33,.55));
+    }
+
+    header h1{
+      margin: 0 0 6px;
+      font-size: clamp(22px, 3vw, 30px);
+      letter-spacing:.2px; font-weight:800; color:#fff; text-align:center;
+      display:flex; gap:10px; justify-content:center; align-items:center;
+    }
+    header h1 .dot{
+      width:12px; height:12px; border-radius:50%;
+      background:radial-gradient(circle at 35% 35%, #fff, #e87a7a 55%, transparent 65%);
+      box-shadow:0 0 18px rgba(224,33,33,.65), inset 0 0 6px rgba(255,255,255,.35);
+    }
+    header p{ margin:0; text-align:center; color:var(--muted) }
+
+    .toolbar{
+      display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:center;
+      margin: 18px 0 8px;
+    }
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center; gap:8px;
+      border:1px solid #000; background:#111214; color:#fff;
+      border-radius:12px; padding:10px 14px; font-weight:800; cursor:pointer; transition:.2s;
+      box-shadow:0 6px 16px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.05);
+      font-size:14px;
+    }
+    .btn:hover{
+      background:linear-gradient(135deg, #e02121, #b01a1a);
+      border-color:#e02121; transform:translateY(-1px);
+      box-shadow:0 12px 28px rgba(224,33,33,.35);
+    }
+    .btn:active{ transform:none }
+    .btn-outline, .btn.secondary{
+      background:rgba(255,255,255,.04); border:1px solid var(--border); color:#f0f0f0;
+    }
+    .btn-outline:hover, .btn.secondary:hover{ color:#fff }
+
+    .search{
+      flex: 1 1 260px; max-width: 480px; display:flex; align-items:center; gap:8px;
+      background: rgba(255,255,255,.04);
+      border-radius: 999px; padding: 8px 12px; border:1px solid var(--border);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
+    }
+    .search input{
+      flex:1; border:0; background:transparent; outline:none; font-size:14px; color:#fff;
+    }
+    .toolbar .count{ min-width:110px; text-align:center; color:var(--muted) }
+
+    .tabs{
+      display:grid; grid-template-columns: repeat(3, minmax(0,1fr));
+      gap:10px; margin: 16px 0 8px;
+    }
+    .tab{
+      border:1px solid var(--border); color:#f0f0f0; background:rgba(255,255,255,.02);
+      border-radius:999px; padding:10px 14px; font-weight:800; font-size:14px; text-align:center;
+      transition:.2s; cursor:pointer;
+    }
+    .tab:hover{ border-color:rgba(224,33,33,.6); color:#fff; box-shadow:0 8px 24px rgba(224,33,33,.18) }
+    .tab[aria-selected="true"]{
+      color:var(--primary-ink); border-color:transparent;
+      background: linear-gradient(135deg, #e02121 0%, #a21515 100%);
+      box-shadow:0 10px 30px rgba(224,33,33,.35);
+    }
+
+    .panel{ display:none; animation: fade .25s ease-out; }
+    .panel.active{ display:block }
+    @keyframes fade{ from{opacity:.6; transform:translateY(4px)} to{opacity:1; transform:none} }
+
+    .day{
+      border:1px solid var(--border); border-radius:12px; margin:12px 0; background:rgba(255,255,255,.03); overflow:hidden;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
+    }
+    .day-header{
+      width:100%; display:flex; justify-content:space-between; align-items:center; gap:8px;
+      background: rgba(255,255,255,.05); border:0; padding:14px 16px; font-weight:800; color:#fff; cursor:pointer;
+    }
+    .chev{ transition: transform .2s ease }
+    .day-header[aria-expanded="true"] .chev{ transform: rotate(90deg) }
+    .day-details{ padding:10px 16px 14px; color:#fff }
+    .muted{ color: var(--muted) }
+    ul{ margin:6px 0 0 18px }
+
+    /* ====== Chips & badges ====== */
+    .wg{ display:flex; align-items:flex-start; gap:10px; flex-wrap:wrap; margin:6px 0; }
+    .wg-badge{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:6px 10px; border-radius:999px; font-size:12px; font-weight:800; letter-spacing:.2px;
+      background: rgba(255,255,255,.06); border:1px solid var(--border); color:#f3f3f3;
+      white-space:nowrap; box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+    }
+    .wg-badge i{
+      display:inline-block; width:10px; height:10px; border-radius:999px;
+      background: radial-gradient(circle at 35% 35%, #fff, #e87a7a 55%, transparent 70%);
+      box-shadow: 0 0 10px rgba(224,33,33,.55);
+    }
+    .chip-wrap{ display:flex; flex-wrap:wrap; gap:8px; }
+
+    .exercise-chip{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 12px; border-radius:999px; border:1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      color:#fff; font-weight:800; cursor:pointer; transition:.18s ease;
+      box-shadow: 0 6px 16px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.05);
+      line-height:1;
+    }
+    .exercise-chip:hover{
+      background:linear-gradient(135deg, #e02121, #b01a1a);
+      border-color:#e02121; transform: translateY(-1px);
+      box-shadow:0 12px 28px rgba(224,33,33,.35);
+    }
+    .exercise-chip:focus-visible{
+      outline:none; box-shadow: 0 0 0 3px var(--ring);
+    }
+    .exercise-chip svg{
+      width:16px; height:16px; flex:0 0 16px; opacity:.95;
+    }
+    .exercise-chip .arrow{
+      font-size:12px; opacity:.9; transform: translateX(-2px);
+      transition: transform .18s ease, opacity .18s ease;
+    }
+    .exercise-chip:hover .arrow{ transform: translateX(0); opacity:1; }
+
+    mark{ background:#fff0a8; padding:0 2px; border-radius:4px; color:#111 }
+    .hidden{ display:none !important }
+    .result-focus{ outline:3px solid var(--primary); outline-offset:2px; border-radius:8px; background: rgba(224,33,33,.08) }
+
+    /* ====== Responsive tweaks ====== */
+    @media (max-width: 760px){
+      .wg{ flex-direction:column; align-items:flex-start }
+      ul{ margin-left:0 }
+    }
+    @media (max-width: 640px){ .tabs{ grid-template-columns: 1fr } }
+    @media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important } }
+
+    /* ===== Rest Timer ===== */
+    .timer-fab{
+      position: fixed; right: 20px; bottom: 20px; z-index: 9999;
+      display:inline-flex; align-items:center; gap:8px;
+      background:#111214; color:#fff; border:1px solid var(--border); border-radius:999px;
+      padding:10px 14px; font-weight:800; cursor:pointer; box-shadow:0 12px 28px rgba(0,0,0,.35);
+      transition:.2s;
+    }
+    .timer-fab:hover{
+      background:linear-gradient(135deg,#e02121,#b01a1a); border-color:#e02121;
+      transform: translateY(-1px); box-shadow:0 18px 36px rgba(224,33,33,.35);
+    }
+    .timer-panel{
+      position: fixed; right: 20px; bottom: 70px; z-index: 9999; width: 280px;
+      border:1px solid var(--border); border-radius:16px; background:var(--panel); box-shadow:var(--elev-1); padding:12px; display:none;
+      backdrop-filter: blur(10px) saturate(115%);
+    }
+    .timer-time{
+      font-size:42px; font-weight:900; letter-spacing:1px; text-align:center; margin:6px 0 10px;
+      text-shadow:0 2px 10px rgba(0,0,0,.5);
+    }
+    .timer-progress{
+      height:6px; border-radius:999px; background:rgba(255,255,255,.08);
+      overflow:hidden; margin:6px 4px 10px;
+    }
+    .timer-progress > i{
+      display:block; height:100%; width:0%;
+      background: linear-gradient(90deg,#e02121,#a21515);
+      box-shadow: 0 0 12px rgba(224,33,33,.45);
+      transition: width .25s linear;
+    }
+    .timer-actions{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center }
+    .timer-actions .btn{ padding:8px 12px }
+    .timer-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin:4px 0 8px }
+    .timer-row .pill{
+      display:inline-block; padding:4px 8px; border:1px solid var(--border); border-radius:999px; font-size:12px; color:var(--muted);
+    }
+
+    /* ===== Modal (centered + robust sizing) ===== */
+    /* NEW: ensure dialog is hidden unless explicitly opened */
+    dialog:not([open]){ display:none !important; }
+
+    dialog#videoModal{
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      width:min(1000px, 96vw);
+      max-height: 92vh;
+      border:0; border-radius:16px; padding:0; overflow:hidden;
+      box-shadow:0 30px 80px rgba(0,0,0,.6);
+      background: var(--panel-solid); color:#fff; margin:0;
+
+      display:grid;
+      grid-template-rows: auto 1fr;
+    }
+    dialog::backdrop{ background: rgba(0,0,0,.55) }
+
+    .modal-head{
+      display:flex; justify-content:space-between; align-items:center; gap:10px; padding:14px 16px;
+      border-bottom:1px solid var(--border); background: rgba(255,255,255,.04);
+    }
+    .modal-title{ margin:0; font-size:18px; color:#fff; text-transform: lowercase; }
+    .modal-close{
+      appearance:none; border:1px solid var(--border); background:rgba(255,255,255,.04); color:#fff;
+      border-radius:8px; width:36px; height:36px; cursor:pointer; font-size:20px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+    }
+    .modal-close:hover{ border-color:#e02121; background:rgba(224,33,33,.15) }
+
+    .modal-body{
+      background:#000;
+      overflow:auto;
+      padding:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    #videoPlayer{
+      width:100%;
+      height:auto;
+      aspect-ratio: 16 / 9;
+      max-height: calc(92vh - 60px);
+      background:#000;
+      display:block;
+      object-fit:contain;
+      border-radius:0;
+      image-rendering:auto;
+    }
+
+    @media (max-width: 560px){
+      dialog#videoModal{
+        width:100vw;
+        height:100dvh;
+        max-height:100dvh;
+        border-radius:0;
+        transform:none;
+        top:0; left:0;
+      }
+      #videoPlayer{ max-height: calc(100dvh - 60px); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1><span class="dot"></span> Workout Split Plans</h1>
+      <p class="muted">Tap any exercise chip to play a local video.</p>
+    </header>
+
+    <div class="toolbar" role="toolbar" aria-label="Page tools">
+      <div class="search" role="search">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M21 21l-3.8-3.8M10.8 18a7.2 7.2 0 1 1 0-14.4 7.2 7.2 0 0 1 0 14.4Z" stroke="#9aa3b2" stroke-width="2" stroke-linecap="round"/></svg>
+        <input id="q" type="search" placeholder="Quick find an exercise… (e.g., lat pull down)" autocomplete="off" />
+      </div>
+      <button class="btn" id="expandAll" type="button">Expand all</button>
+      <button class="btn btn-outline secondary" id="collapseAll" type="button">Collapse all</button>
+      <button class="btn btn-outline secondary" id="printBtn" type="button">Print</button>
+      <button class="btn btn-outline secondary" id="clearSearch" type="button">Clear</button>
+      <button class="btn" id="prevHit" type="button" disabled>Prev</button>
+      <button class="btn" id="nextHit" type="button" disabled>Next</button>
+      <span id="hitCount" class="count" aria-live="polite"></span>
+      <button class="btn btn-outline secondary" id="filterBtn" type="button" aria-pressed="false" title="Hide non-matching items">Filter mode</button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs" role="tablist" aria-label="Split types">
+      <button class="tab" role="tab" id="tab-total" aria-selected="true" aria-controls="panel-total" data-panel="#panel-total">Total Body Splits</button>
+      <button class="tab" role="tab" id="tab-upperlower" aria-selected="false" aria-controls="panel-upperlower" data-panel="#panel-upperlower">Upper/Lower Splits</button>
+      <button class="tab" role="tab" id="tab-ppl" aria-selected="false" aria-controls="panel-ppl" data-panel="#panel-ppl">Push–Pull–Legs Splits</button>
+    </div>
+
+    <!-- Panels -->
+    <section id="panel-total" class="panel active" role="tabpanel" aria-labelledby="tab-total">
+      <h2>Total Body Splits</h2>
+      <p class="muted">Full-body routines 3×/week. Ideal for beginners or busy schedules.</p>
+
+      <div class="day" data-id="t1">
+        <button class="day-header" type="button" aria-expanded="false" aria-controls="t1-c">
+          <span>Day 1: Full Body</span><span class="chev">▶</span>
+        </button>
+        <div class="day-details" id="t1-c" hidden>
+          <ul>
+            <li>Legs – Leg Press, Calf Raises</li>
+            <li>Chest – Incline Bench Press, Pec Deck Fly</li>
+            <li>Back – Lat Pull Down, T-Bar Rows</li>
+            <li>Shoulders – Shoulder Press, Lateral Raises</li>
+            <li>Arms – Dumbbell Curl, Triceps Pushdown</li>
+            <li>Abs – Crunches, Leg Raises</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="day" data-id="t2">
+        <button class="day-header" type="button" aria-expanded="false" aria-controls="t2-c">
+          <span>Day 2: Rest</span><span class="chev">▶</span>
+        </button>
+        <div class="day-details" id="t2-c" hidden>
+          <p class="muted">Take a break and let your muscles recover.</p>
+        </div>
+      </div>
+
+      <div class="day" data-id="t3">
+        <button class="day-header" type="button" aria-expanded="false" aria-controls="t3-c">
+          <span>Day 3: Full Body</span><span class="chev">▶</span>
+        </button>
+        <div class="day-details" id="t3-c" hidden>
+          <ul>
+            <li>Legs – Leg Press, Calf Raises</li>
+            <li>Chest – Incline Bench Press, Pec Deck Fly</li>
+            <li>Back – Lat Pull Down, T-Bar Rows</li>
+            <li>Shoulders – Shoulder Press, Lateral Raises</li>
+            <li>Arms – Dumbbell Curl, Triceps Pushdown</li>
+            <li>Abs – Crunches, Leg Raises</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="day" data-id="t4">
+        <button class="day-header" type="button" aria-expanded="false" aria-controls="t4-c">
+          <span>Day 4: Rest</span><span class="chev">▶</span>
+        </button>
+        <div class="day-details" id="t4-c" hidden>
+          <p class="muted">Stretch, hydrate, or go for a light walk.</p>
+        </div>
+      </div>
+
+      <div class="day" data-id="t5">
+        <button class="day-header" type="button" aria-expanded="false" aria-controls="t5-c">
+          <span>Day 5: Full Body</span><span class="chev">▶</span>
+        </button>
+        <div class="day-details" id="t5-c" hidden>
+          <ul>
+            <li>Legs – Leg Press, Calf Raises</li>
+            <li>Chest – Incline Bench Press, Pec Deck Fly</li>
+            <li>Back – Lat Pull Down, T-Bar Rows</li>
+            <li>Shoulders – Shoulder Press, Lateral Raises</li>
+            <li>Arms – Dumbbell Curl, Triceps Pushdown</li>
+            <li>Abs – Crunches, Leg Raises</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="day" data-id="t6">
+        <button class="day-header" type="button" aria-expanded="false" aria-controls="t6-c">
+          <span>Day 6: Rest</span><span class="chev">▶</span>
+        </button>
+        <div class="day-details" id="t6-c" hidden>
+          <p class="muted">Recovery day. Consider foam rolling or yoga.</p>
+        </div>
+      </div>
+
+      <div class="day" data-id="t7">
+        <button class="day-header" type="button" aria-expanded="false" aria-controls="t7-c">
+          <span>Day 7: Rest</span><span class="chev">▶</span>
+        </button>
+        <div class="day-details" id="t7-c" hidden>
+          <p class="muted">Enjoy your rest day. Prepare for the week ahead.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="panel-upperlower" class="panel" role="tabpanel" aria-labelledby="tab-upperlower">
+      <h2>Upper Body / Lower Body Splits</h2>
+      <p class="muted">4×/week split ideal for intermediate progression.</p>
+
+      <div class="day" data-id="u1">
+        <button class="day-header" type="button" aria-expanded="false" aria-controls="u1-c">
+          <span>Day 1: Upper Body</span><span class="chev">▶</span>
+        </button>
+        <div class="day-details" id="u1-c" hidden>
+          <ul>
+            <li>Chest – Flat Bench Press, Chest Press</li>
+            <li>Back – Seated Cable Row, Reverse Pec Deck Fly</li>
+            <li>Shoulders – Front Raises, Face Pulls</li>
+            <li>Biceps – Hammer Curls, Concentration Curls</li>
+            <li>Triceps – Skull Crushers, Overhead Extension</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="day" data-id="u2">
+        <button class="day-header" type="button" aria-expanded="false" aria-controls="u2-c">
+          <span>Day 2: Lower Body</span><span class="chev">▶</span>
+        </button>
+        <div class="day-details" id="u2-c" hidden>
+          <ul>
+            <li>Quads/Glutes – Hack Squats, Leg Extension</li>
+            <li>Calves – Calf Raises</li>
+            <li>Hamstrings – Optional (add Romanian Deadlift if available)</li>
+            <li>Abs – Russian Twists, V-Sits</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="day" data-id="u3">
+        <button class="day-header" type="button" aria-expanded="false" aria-controls="u3-c"><span>Day 3: Rest</span><span class="chev">▶</span></button>
+        <div class="day-details" id="u3-c" hidden>
+          <p class="muted">Focus on recovery. Light stretching is encouraged.</p>
+        </div>
+      </div>
+
+      <div class="day" data-id="u4">
+        <button class="day-header" type="button" aria-expanded="false" aria-controls="u4-c">
+          <span>Day 4: Upper Body</span><span class="chev">▶</span>
+        </button>
+        <div class="day-details" id="u4-c" hidden>
+          <ul>
+            <li>Chest – Flat Bench Press, Chest Press</li>
+            <li>Back – Seated Cable Row, Reverse Pec Deck Fly</li>
+            <li>Shoulders – Front Raises, Face Pulls</li>
+            <li>Biceps – Hammer Curls, Concentration Curls</li>
+            <li>Triceps – Skull Crushers, Overhead Extension</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="day" data-id="u5">
+        <button class="day-header" type="button" aria-expanded="false" aria-controls="u5-c">
+          <span>Day 5: Lower Body</span><span class="chev">▶</span>
+        </button>
+        <div class="day-details" id="u5-c" hidden>
+          <ul>
+            <li>Quads/Glutes – Hack Squats, Leg Extension</li>
+            <li>Calves – Calf Raises</li>
+            <li>Hamstrings – Optional (add Romanian Deadlift if available)</li>
+            <li>Abs – Russian Twists, V-Sits</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="day" data-id="u6">
+        <button class="day-header" type="button" aria-expanded="false" aria-controls="u6-c"><span>Day 6: Rest</span><span class="chev">▶</span></button>
+        <div class="day-details" id="u6-c" hidden>
+          <p class="muted">Recovery day. Rest or do light cardio.</p>
+        </div>
+      </div>
+
+      <div class="day" data-id="u7">
+        <button class="day-header" type="button" aria-expanded="false" aria-controls="u7-c"><span>Day 7: Rest</span><span class="chev">▶</span></button>
+        <div class="day-details" id="u7-c" hidden>
+          <p class="muted">Rest and plan your upcoming training cycle.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="panel-ppl" class="panel" role="tabpanel" aria-labelledby="tab-ppl">
+      <h2>Push–Pull–Legs Splits</h2>
+      <p class="muted">Advanced 6×/week plan. Hit each muscle group twice weekly.</p>
+
+      <div class="day" data-id="p1">
+        <button class="day-header" type="button" aria-expanded="false" aria-controls="p1-c"><span>Day 1: Push (Chest, Shoulders, Triceps)</span><span class="chev">▶</span></button>
+        <div class="day-details" id="p1-c" hidden>
+          <ul>
+            <li>Incline Bench Press, Flat Bench Press, Shoulder Press, Lateral Raises, Triceps Pushdown, Overhead Extension</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="day" data-id="p2">
+        <button class="day-header" type="button" aria-expanded="false" aria-controls="p2-c"><span>Day 2: Pull (Back, Biceps, Rear Delts)</span><span class="chev">▶</span></button>
+        <div class="day-details" id="p2-c" hidden>
+          <ul>
+            <li>Lat Pull Down, T-Bar Rows, Seated Cable Row, Reverse-Pec Deck Fly, Dumbbell Curls, Hammer Curls</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="day" data-id="p3">
+        <button class="day-header" type="button" aria-expanded="false" aria-controls="p3-c"><span>Day 3: Legs (Quads, Glutes, Calves & Abs)</span><span class="chev">▶</span></button>
+        <div class="day-details" id="p3-c" hidden>
+          <ul>
+            <li>Hack Squats, Leg Press, Leg Extension, Calf Raises, Leg Raises, Russian Twists</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="day" data-id="p4">
+        <button class="day-header" type="button" aria-expanded="false" aria-controls="p4-c"><span>Day 4: Rest</span><span class="chev">▶</span></button>
+        <div class="day-details" id="p4-c" hidden>
+          <p class="muted">Rest and plan your upcoming training cycle.</p>
+        </div>
+      </div>
+
+      <div class="day" data-id="p5">
+        <button class="day-header" type="button" aria-expanded="false" aria-controls="p5-c"><span>Day 5: Push (Chest, Shoulders, Triceps)</span><span class="chev">▶</span></button>
+        <div class="day-details" id="p5-c" hidden>
+          <ul>
+            <li>Incline Bench Press, Flat Bench Press, Shoulder Press, Lateral Raises, Triceps Pushdown, Overhead Extension</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="day" data-id="p6">
+        <button class="day-header" type="button" aria-expanded="false" aria-controls="p6-c"><span>Day 6: Pull (Back, Biceps, Rear Delts)</span><span class="chev">▶</span></button>
+        <div class="day-details" id="p6-c" hidden>
+          <ul>
+            <li>Lat Pull Down, T-Bar Rows, Seated Cable Row, Reverse-Pec Deck Fly, Dumbbell Curls, Hammer Curls</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="day" data-id="p7">
+        <button class="day-header" type="button" aria-expanded="false" aria-controls="p7-c"><span>Day 7: Legs (Quads, Glutes, Calves & Abs)</span><span class="chev">▶</span></button>
+        <div class="day-details" id="p7-c" hidden>
+          <ul>
+            <li>Hack Squats, Leg Press, Leg Extension, Calf Raises, Leg Raises, Russian Twists</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- In-page video dialog -->
+  <dialog id="videoModal" aria-label="Exercise video">
+    <div class="modal-head">
+      <h3 id="videoTitle" class="modal-title">Exercise Video</h3>
+      <button class="modal-close" aria-label="Close" id="closeBtn">×</button>
+    </div>
+    <div class="modal-body">
+      <video id="videoPlayer" controls playsinline webkit-playsinline preload="metadata"></video>
+    </div>
+  </dialog>
+
+  <!-- ===== Rest Timer UI ===== -->
+  <button class="timer-fab" id="timerFab" aria-expanded="false" aria-controls="timerPanel" title="Rest timer (press R)">
+    ⏱️ Rest
+  </button>
+  <div class="timer-panel" id="timerPanel" role="dialog" aria-label="Rest timer" aria-modal="false">
+    <div class="timer-row">
+      <span class="pill">Presets</span>
+      <div class="timer-actions" aria-label="Presets">
+        <button class="btn" data-sec="60">60s</button>
+        <button class="btn" data-sec="90">90s</button>
+        <button class="btn" data-sec="120">120s</button>
+      </div>
+    </div>
+    <div class="timer-time" id="timerDisplay">01:30</div>
+    <div class="timer-progress" aria-hidden="true"><i id="timerBar" style="width:0%"></i></div>
+    <div class="timer-actions" aria-label="Controls">
+      <button class="btn btn-outline" id="timerStart">Start</button>
+      <button class="btn btn-outline" id="timerPause">Pause</button>
+      <button class="btn btn-outline" id="timerReset">Reset</button>
+    </div>
+  </div>
+
+  <script>
+  (function(){
+    const ls = window.localStorage;
+
+    /* ===== Tabs ===== */
+    const tabs = Array.from(document.querySelectorAll('.tab'));
+    const panels = Array.from(document.querySelectorAll('.panel'));
+    const TAB_KEY = 'ws-active-tab';
+
+    function setActiveTab(targetId){
+      tabs.forEach(t => t.setAttribute('aria-selected', String(t.dataset.panel === ('#'+targetId))));
+      panels.forEach(p => p.classList.toggle('active', p.id === targetId));
+      ls.setItem(TAB_KEY, targetId);
+      history.replaceState(null, '', '#' + targetId);
+      const qEl = document.getElementById('q');
+      if (typeof window.__wsPerformSearch === 'function' && qEl) window.__wsPerformSearch(qEl.value);
+    }
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => setActiveTab(tab.getAttribute('aria-controls')));
+      tab.addEventListener('keydown', (e)=>{
+        if(e.key === 'ArrowRight' || e.key === 'ArrowLeft'){
+          e.preventDefault();
+          const i = tabs.indexOf(tab);
+          const dir = e.key === 'ArrowRight' ? 1 : -1;
+          const next = tabs[(i + dir + tabs.length) % tabs.length];
+          next.focus();
+        }
+        if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveTab(tab.getAttribute('aria-controls')); }
+      });
+    });
+    const initial = location.hash?.slice(1) || ls.getItem(TAB_KEY) || 'panel-total';
+    if (initial && document.getElementById(initial)) setActiveTab(initial);
+
+    /* ===== Collapsibles ===== */
+    const days = Array.from(document.querySelectorAll('.day'));
+    function toggleDay(day, force){
+      const btn = day.querySelector('.day-header');
+      const panel = day.querySelector('.day-details');
+      const open = force !== undefined ? !!force : panel.hasAttribute('hidden');
+      btn.setAttribute('aria-expanded', String(open));
+      panel.toggleAttribute('hidden', !open);
+    }
+    days.forEach(day => {
+      const btn = day.querySelector('.day-header');
+      btn.addEventListener('click', ()=> toggleDay(day));
+      btn.addEventListener('keydown', (e)=>{ if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleDay(day); } });
+    });
+    document.getElementById('expandAll').addEventListener('click', ()=> days.forEach(d => toggleDay(d, true)) );
+    document.getElementById('collapseAll').addEventListener('click', ()=> days.forEach(d => toggleDay(d, false)) );
+    document.getElementById('printBtn').addEventListener('click', ()=> window.print());
+
+    /* ===== Build pill chips ===== */
+    (function(){
+      const canonical = {
+        "incline bench press": "incline bench press",
+        "flat bench press": "flat bench press",
+        "shoulder press": "shoulder press",
+        "lateral raises": "lateral raises",
+        "triceps pushdown": "tricep pushdown",
+        "overhead extension": "overhead extension",
+        "lat pull down": "lat pull down",
+        "t-bar rows": "t-bar rows",
+        "seated cable row": "seated cable row",
+        "pec deck fly": "pec deck fly", "pec-deck fly": "pec deck fly", "peck deck fly": "pec deck fly",
+        "reverse pec deck fly": "reverse pec deck fly", "reverse-pec deck fly": "reverse pec deck fly",
+        "reverse pec-deck fly": "reverse pec deck fly", "reverse peck deck fly": "reverse pec deck fly",
+        "dumbbell curls": "dumbbell bicep curl", "dumbbell curl": "dumbbell bicep curl",
+        "hammer curls": "hammer curl", "concentration curls": "concentration curl",
+        "front raises": "front raise", "face pulls": "face pull", "skull crushers": "skull crusher",
+        "leg press": "leg press", "calf raises": "calf raises", "hack squats": "hack squat",
+        "leg extension": "leg extension", "romanian deadlift": "romanian deadlift",
+        "crunches": "crunch", "leg raises": "leg raise", "russian twists": "russian twist",
+        "v-sits": "v sit", "chest press": "chest press"
+      };
+      const slugify = s => s.toLowerCase()
+        .replace(/&/g, ' and ')
+        .replace(/[^a-z0-9]+/g,'-')
+        .replace(/^-+|-+$/g,'')
+        .replace(/--+/g,'-');
+
+      function makeChip(label){
+        const canon = canonical[label.toLowerCase()] || label;
+        const slug = slugify(canon);
+        const src  = `videos/${slug}.mp4`;
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'exercise-chip';
+        btn.dataset.exercise = canon;
+        btn.dataset.src = src;
+        btn.setAttribute('aria-label', `Play ${canon} video`);
+
+        const icon = document.createElementNS('http://www.w3.org/2000/svg','svg');
+        icon.setAttribute('viewBox','0 0 24 24');
+        icon.setAttribute('aria-hidden','true');
+        icon.innerHTML = '<path d="M2 10h3v4H2v-4Zm17 0h3v4h-3v-4ZM6 9h2v6H6V9Zm10 0h2v6h-2V9Zm-7 2h6v2H9v-2Z" fill="currentColor"/>';
+        btn.appendChild(icon);
+
+        const text = document.createElement('span');
+        text.textContent = canon;
+        btn.appendChild(text);
+
+        const arrow = document.createElement('span');
+        arrow.className = 'arrow';
+        arrow.textContent = '▶';
+        btn.appendChild(arrow);
+
+        return btn;
+      }
+
+      function buildChipsFromLine(li){
+        const raw = li.textContent.trim();
+        const match = raw.match(/^\s*([^–—\-:]+)\s*[–—\-:]\s*(.+)$/);
+        const group = match ? match[1].trim() : null;
+        const rest  = match ? match[2].trim() : raw;
+
+        const items = rest.split(',').map(s => s.trim()).filter(Boolean);
+
+        const wrap = document.createElement('div');
+        wrap.className = 'wg';
+
+        if(group){
+          const badge = document.createElement('span');
+          badge.className = 'wg-badge';
+          badge.innerHTML = '<i></i>' + group;
+          wrap.appendChild(badge);
+        }
+
+        const chips = document.createElement('div');
+        chips.className = 'chip-wrap';
+        items.forEach(item => chips.appendChild(makeChip(item)));
+        wrap.appendChild(chips);
+
+        li.innerHTML = '';
+        li.appendChild(wrap);
+      }
+
+      document.querySelectorAll('.day-details li').forEach(buildChipsFromLine);
+
+      document.body.addEventListener('click', (e)=>{
+        const chip = e.target.closest('.exercise-chip');
+        if(!chip) return;
+        e.preventDefault();
+        const title = chip.dataset.exercise;
+        const src   = chip.dataset.src;
+        if(typeof window.openVideo === 'function'){ window.openVideo(title, src); }
+      });
+    })();
+
+    /* ===== Search with highlight/filter ===== */
+    const state = { results: [], idx: -1, filter: false };
+    const q = document.getElementById('q');
+    const prevBtn = document.getElementById('prevHit');
+    const nextBtn = document.getElementById('nextHit');
+    const clearBtn = document.getElementById('clearSearch');
+    const filterBtn = document.getElementById('filterBtn');
+    const countEl = document.getElementById('hitCount');
+
+    function clearMarks(root){
+      root.querySelectorAll('mark').forEach(m => { const p = m.parentNode; while(m.firstChild) p.insertBefore(m.firstChild, m); p.removeChild(m); });
+      root.querySelectorAll('.result-focus').forEach(el => el.classList.remove('result-focus'));
+      root.querySelectorAll('.hidden').forEach(el => el.classList.remove('hidden'));
+    }
+    function highlightTerm(el, term){
+      if(!term) return;
+      const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+      const nodes = [];
+      while(walker.nextNode()) nodes.push(walker.currentNode);
+      nodes.forEach(node => {
+        const text = node.nodeValue;
+        const lower = text.toLowerCase();
+        let start = 0;
+        if(lower.indexOf(term) === -1) return;
+        const frag = document.createDocumentFragment();
+        while(true){
+          const idx = lower.indexOf(term, start);
+          if(idx === -1) break;
+          if(idx > start) frag.append(document.createTextNode(text.slice(start, idx)));
+          const mark = document.createElement('mark');
+          mark.textContent = text.slice(idx, idx + term.length);
+          frag.append(mark);
+          start = idx + term.length;
+        }
+        if(start < text.length) frag.append(document.createTextNode(text.slice(start)));
+        node.parentNode.replaceChild(frag, node);
+      });
+    }
+    function highlightTerms(el, terms){ terms.forEach(t => highlightTerm(el, t.toLowerCase())); }
+
+    function updateCount(){
+      if(!state.results.length){ countEl.textContent = 'No matches'; prevBtn.disabled = true; nextBtn.disabled = true; return; }
+      countEl.textContent = (state.idx+1) + '/' + state.results.length + ' matches';
+      prevBtn.disabled = state.results.length < 2;
+      nextBtn.disabled = state.results.length < 2;
+    }
+    function focusResult(i){
+      state.results.forEach(li => li.classList.remove('result-focus'));
+      const li = state.results[i];
+      if(!li) return;
+      li.classList.add('result-focus');
+      li.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function performSearch(term){
+      window.__wsPerformSearch = performSearch;
+      const panelsAll = Array.from(document.querySelectorAll('.panel'));
+      panelsAll.forEach(p => clearMarks(p));
+      state.results = []; state.idx = -1;
+      const clean = term.trim();
+      if(!clean){ updateCount(); return; }
+      const terms = clean.split(' ').filter(Boolean);
+
+      let activePanel = document.querySelector('.panel.active');
+      const ordered = [activePanel, ...panelsAll.filter(p => p !== activePanel)];
+      let firstPanelWithHit = null;
+
+      ordered.forEach(panel => {
+        const items = Array.from(panel.querySelectorAll('.day-details li'));
+        let panelHit = false;
+        items.forEach(li => {
+          const text = li.textContent.toLowerCase();
+          const isMatch = terms.every(t => text.includes(t.toLowerCase()));
+          if(isMatch){
+            const day = li.closest('.day');
+            if(day) toggleDay(day, true);
+            highlightTerms(li, terms);
+            state.results.push(li);
+            panelHit = true;
+          } else if(state.filter){
+            li.classList.add('hidden');
+          }
+        });
+        if(state.filter){
+          panel.querySelectorAll('.day').forEach(day => {
+            if(!day.querySelector('li:not(.hidden)')) day.classList.add('hidden');
+          });
+        }
+        if(panelHit && !firstPanelWithHit) firstPanelWithHit = panel.id;
+      });
+
+      if(firstPanelWithHit && document.querySelector('.panel.active') && document.querySelector('.panel.active').id !== firstPanelWithHit){
+        setActiveTab(firstPanelWithHit);
+      }
+
+      if(state.results.length){ state.idx = 0; focusResult(0); }
+      updateCount();
+    }
+
+    let tId;
+    q.addEventListener('input', () => { clearTimeout(tId); tId = setTimeout(() => performSearch(q.value), 120); });
+    q.addEventListener('keydown', (e) => { if(e.key === 'Enter'){ if(state.results.length){ state.idx = (state.idx + 1) % state.results.length; focusResult(state.idx); updateCount(); } } });
+    nextBtn.addEventListener('click', ()=> { if(!state.results.length) return; state.idx = (state.idx + 1) % state.results.length; focusResult(state.idx); updateCount(); });
+    prevBtn.addEventListener('click', ()=> { if(!state.results.length) return; state.idx = (state.idx - 1 + state.results.length) % state.results.length; focusResult(state.idx); updateCount(); });
+
+    clearBtn.addEventListener('click', ()=> {
+      q.value = ''; state.filter = false; filterBtn.setAttribute('aria-pressed','false');
+      document.querySelectorAll('.panel').forEach(p => clearMarks(p));
+      state.results = []; state.idx = -1; updateCount();
+    });
+    filterBtn.addEventListener('click', ()=> { state.filter = !state.filter; filterBtn.setAttribute('aria-pressed', String(state.filter)); performSearch(q.value); });
+
+    performSearch('');
+
+    /* ===== Modal video player (local only) ===== */
+    const dlg = document.getElementById('videoModal');
+    const v   = document.getElementById('videoPlayer');
+    const titleEl = document.getElementById('videoTitle');
+    const closeBtn = document.getElementById('closeBtn');
+
+    /* NEW: force dialog to be closed on load, just in case */
+    if (dlg.hasAttribute('open')) dlg.removeAttribute('open');
+
+    function openVideo(title, src){
+      titleEl.textContent = (title || 'Exercise Video').toLowerCase();
+
+      v.removeAttribute('src');
+      v.load();
+      if (src) v.src = src;
+      v.currentTime = 0;
+
+      v.onerror = () => {
+        alert('Could not load the local video for "' + (title || 'this exercise') + '".');
+      };
+
+      if(typeof dlg.showModal === 'function') dlg.showModal(); else dlg.setAttribute('open','');
+      v.play().catch(()=>{});
+    }
+    window.openVideo = openVideo;
+
+    function closeVideo(){
+      try { v.pause(); } catch(e){}
+      v.removeAttribute('src');
+      v.load();
+      if(typeof dlg.close === 'function') dlg.close(); else dlg.removeAttribute('open');
+    }
+
+    // Wire up modal
+    closeBtn.addEventListener('click', closeVideo);
+    dlg.addEventListener('cancel', closeVideo);
+    dlg.addEventListener('click', (e)=>{
+      const r = dlg.getBoundingClientRect();
+      if(e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom){ closeVideo(); }
+    });
+    document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && dlg.open) closeVideo(); });
+
+    /* ===== Rest Timer ===== */
+    (function(){
+      const FAB_KEY = 'ws-rest-timer-seconds';
+      const fab = document.getElementById('timerFab');
+      const panel = document.getElementById('timerPanel');
+      const disp = document.getElementById('timerDisplay');
+      const bar  = document.getElementById('timerBar');
+      const startBtn = document.getElementById('timerStart');
+      const pauseBtn = document.getElementById('timerPause');
+      const resetBtn = document.getElementById('timerReset');
+
+      let base = parseInt(localStorage.getItem(FAB_KEY) || '90', 10);
+      let left = base;
+      let id = null;
+
+      function fmt(s){ const m = Math.floor(s/60), r = s%60; return `${String(m).padStart(2,'0')}:${String(r).padStart(2,'0')}` }
+      function render(){
+        disp.textContent = fmt(left);
+        const pct = Math.max(0, Math.min(1, 1 - (left / Math.max(1, base))));
+        bar.style.width = (pct*100).toFixed(1) + '%';
+      }
+      function tick(){
+        if(left<=0){ stop(); chime(); try{ navigator.vibrate?.(120); }catch(e){} return; }
+        left--; render();
+      }
+      function start(){ if(left<=0) left = base; if(id) return; id = setInterval(tick, 1000); }
+      function stop(){ clearInterval(id); id = null; }
+      function reset(){ stop(); left = base; render(); }
+
+      function chime(){
+        try{
+          const ctx = new (window.AudioContext||window.webkitAudioContext)();
+          const o1 = ctx.createOscillator(), g = ctx.createGain();
+          o1.type='sine'; o1.frequency.value = 880; g.gain.value=.0001; o1.connect(g); g.connect(ctx.destination);
+          o1.start();
+          g.gain.exponentialRampToValueAtTime(.4, ctx.currentTime+.01);
+          g.gain.exponentialRampToValueAtTime(.0001, ctx.currentTime+.25);
+          o1.stop(ctx.currentTime+.3);
+        }catch(e){}
+      }
+
+      fab.addEventListener('click', ()=>{
+        const open = panel.style.display !== 'block';
+        panel.style.display = open ? 'block' : 'none';
+        fab.setAttribute('aria-expanded', String(open));
+        if(open) render();
+      });
+
+      panel.addEventListener('click', (e)=>{
+        const b = e.target.closest('button[data-sec]');
+        if(b){
+          base = parseInt(b.dataset.sec,10);
+          localStorage.setItem(FAB_KEY, String(base));
+          left = base;
+          render();
+        }
+      });
+
+      startBtn.addEventListener('click', start);
+      pauseBtn.addEventListener('click', stop);
+      resetBtn.addEventListener('click', reset);
+
+      document.addEventListener('keydown', (e)=>{
+        if(e.key.toLowerCase()==='r'){ fab.click(); }
+        if(panel.style.display==='block'){
+          if(e.key===' '){ e.preventDefault(); id ? stop() : start(); }
+          if(e.key==='Escape'){ panel.style.display='none'; fab.setAttribute('aria-expanded','false'); }
+        }
+      });
+
+      document.addEventListener('click', (e)=>{
+        if(panel.style.display!=='block') return;
+        if(e.target.closest('#timerPanel') || e.target.closest('#timerFab')) return;
+        panel.style.display='none'; fab.setAttribute('aria-expanded','false');
+      });
+
+      left = base; render();
+    })();
+  })();
+  </script>
+</body>
+</html>

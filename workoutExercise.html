@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Interactive Muscle Groups — Reliable GIFs</title>
+<style>
+  :root{--bg:#171819;--card:#fff;--ink:#0f1115;--primary:#e02121;--line:#eceff3}
+  body{margin:0;background:var(--bg);color:#fff;font:16px/1.45 system-ui,Segoe UI,Roboto,Arial}
+  .wrap{max-width:1100px;margin:32px auto;padding:0 16px}
+  .card{background:var(--card);color:var(--ink);border-radius:16px;padding:24px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+  .header{display:flex;justify-content:space-between;gap:12px;align-items:center;border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:16px}
+  .canvas{display:grid;grid-template-columns:320px 1fr;gap:24px}
+  @media (max-width:980px){.canvas{grid-template-columns:1fr}}
+  /* Group list */
+  .groups{border:1px solid var(--line);border-radius:14px;background:#fafbfc}
+  .groups h3{margin:12px 12px 8px 12px;font-size:15px;color:#475569}
+  .group-grid{display:grid;grid-template-columns:1fr;gap:6px;padding:10px}
+  .btn{
+    display:flex;align-items:center;justify-content:space-between;
+    gap:10px;border:1px solid var(--line);background:#fff;
+    border-radius:12px;padding:10px 12px;cursor:pointer;font-weight:700;
+    transition:background .15s,border-color .15s,transform .06s ease;
+  }
+  .btn:hover{border-color:#d7dbe2;background:#fff}
+  .btn.active{border-color:var(--primary);box-shadow:0 0 0 2px rgba(224,33,33,.15)}
+  .btn .muted{color:#6b7280;font-weight:500;font-size:12px}
+  .btn .dot{width:10px;height:10px;border-radius:50%;background:#e5e7eb}
+  .btn.active .dot{background:var(--primary)}
+  /* Panel */
+  .panel{background:#f8fafc;border:1px solid var(--line);border-radius:14px;padding:16px}
+  .panel h2{margin:0 0 6px;font-size:18px}
+  .panel .muted{color:#6b7280;font-size:13px;margin:0 0 14px}
+  .legend{margin-top:-6px;margin-bottom:12px;color:#475569;font-size:13px}
+  /* Exercises */
+  .ex-list{display:grid;gap:14px}
+  .ex{display:grid;grid-template-columns:140px 1fr;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .ex figure{margin:0;aspect-ratio:1/1;background:#111;display:grid;place-items:center}
+  .ex img,.ex video{width:100%;height:100%;object-fit:cover;display:block}
+  .ex div{padding:10px 12px}
+  .ex b{display:block;margin-bottom:4px}
+  .empty{padding:22px;text-align:center;color:#6b7280;background:#fff;border:1px dashed #e5e7eb;border-radius:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <div class="header">
+      <h1 style="margin:0">Interactive Muscle Groups</h1>
+      <div class="muted" style="color:#6b7280">Hover to preview • Click to lock selection</div>
+    </div>
+
+    <div class="canvas">
+      <!-- LEFT: groups -->
+      <aside class="groups">
+        <h3>Upper Body</h3>
+        <div class="group-grid" id="upper-grid">
+          <!-- Buttons injected by JS -->
+        </div>
+        <h3>Core</h3>
+        <div class="group-grid" id="core-grid"></div>
+        <h3>Lower Body</h3>
+        <div class="group-grid" id="lower-grid"></div>
+        <h3>Back</h3>
+        <div class="group-grid" id="back-grid"></div>
+      </aside>
+
+      <!-- RIGHT: panel -->
+      <section class="panel" id="panel">
+        <h2>Pick a muscle group</h2>
+        <p class="muted">Hover a group to see suggested exercises. Click to pin it.</p>
+        <div class="legend" id="legend"></div>
+        <div class="empty">Nothing selected yet.</div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- Data ---------- */
+const PLACEHOLDER = "data:image/svg+xml;utf8," +
+  encodeURIComponent('<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 300 300\"><rect width=\"100%\" height=\"100%\" fill=\"#111\"/><text x=\"50%\" y=\"50%\" dominant-baseline=\"middle\" text-anchor=\"middle\" fill=\"#9aa1a8\" font-family=\"Arial\" font-size=\"16\">media not available</text></svg>');
+
+const EX = {
+  Chest: [
+    { name: "Push-up",
+      media: ["https://media.giphy.com/media/5z6gQyJf7PIAAAAC/pushup-workout.gif",
+              "https://media.tenor.com/5z6gQyJf7PIAAAPo/pushup-workout.mp4"] },
+    { name: "Barbell Bench Press",
+      media: ["https://media.tenor.com/6aZxeNQ0G9kAAAAC/bench-press.gif",
+              "https://media.tenor.com/6aZxeNQ0G9kAAAPo/bench-press.mp4"] },
+    { name: "Dumbbell Fly",
+      media: ["https://media.tenor.com/3gNBXntFZYoAAAAC/dumbbell-fly.gif",
+              "https://media.tenor.com/3gNBXntFZYoAAAPo/dumbbell-fly.mp4"] }
+  ],
+  Shoulders: [
+    { name: "DB Shoulder Press",
+      media: ["https://media.tenor.com/9b0VY2G2K5kAAAAC/shoulder-press.gif",
+              "https://media.tenor.com/9b0VY2G2K5kAAAPo/shoulder-press.mp4"] },
+    { name: "Lateral Raise",
+      media: ["https://media.tenor.com/4WUy_7d8xDkAAAAC/lateral-raise.gif",
+              "https://media.tenor.com/4WUy_7d8xDkAAAPo/lateral-raise.mp4"] }
+  ],
+  Biceps: [
+    { name: "Biceps Curl",
+      media: ["https://media.tenor.com/4T0mzjXoEzkAAAAC/biceps-curl.gif",
+              "https://media.tenor.com/4T0mzjXoEzkAAAPo/biceps-curl.mp4"] },
+    { name: "Hammer Curl",
+      media: ["https://media.tenor.com/2b6MEUpuSKQAAAAC/hammer-curl.gif",
+              "https://media.tenor.com/2b6MEUpuSKQAAAPo/hammer-curl.mp4"] }
+  ],
+  Triceps: [
+    { name: "Triceps Pushdown",
+      media: ["https://media.tenor.com/kYwX9E0C3cMAAAAC/tricep-pushdown.gif",
+              "https://media.tenor.com/kYwX9E0C3cMAAAPo/tricep-pushdown.mp4"] },
+    { name: "Diamond Push-up",
+      media: ["https://media.tenor.com/8F9g6f0k0OcAAAAC/diamond-pushups.gif",
+              "https://media.tenor.com/8F9g6f0k0OcAAAPo/diamond-pushups.mp4"] }
+  ],
+  Forearms: [
+    { name: "Reverse Curl",
+      media: ["https://media.tenor.com/EQ8tZgCUG4oAAAAC/reverse-curl.gif",
+              "https://media.tenor.com/EQ8tZgCUG4oAAAPo/reverse-curl.mp4"] },
+    { name: "Farmer Carry",
+      media: ["https://media.tenor.com/2uZkq9eTtVYAAAAC/farmers-walk.gif",
+              "https://media.tenor.com/2uZkq9eTtVYAAAPo/farmers-walk.mp4"] }
+  ],
+  Abs: [
+    { name: "Crunch",
+      media: ["https://media.tenor.com/mwT5y7kqI0IAAAAC/ab-crunch.gif",
+              "https://media.tenor.com/mwT5y7kqI0IAAAPo/ab-crunch.mp4"] },
+    { name: "Hanging Leg Raise",
+      media: ["https://media.tenor.com/Vm8RArj8S7cAAAAC/leg-raises.gif",
+              "https://media.tenor.com/Vm8RArj8S7cAAAPo/leg-raises.mp4"] }
+  ],
+  Obliques: [
+    { name: "Side Plank",
+      media: ["https://media.tenor.com/qP2d1nQ8SfgAAAIC/side-plank.gif",
+              "https://media.tenor.com/qP2d1nQ8SfgAAAPo/side-plank.mp4"] },
+    { name: "Cable Woodchop",
+      media: ["https://media.tenor.com/0Q6s3F8kIqcAAAAC/cable-woodchopper.gif",
+              "https://media.tenor.com/0Q6s3F8kIqcAAAPo/cable-woodchopper.mp4"] }
+  ],
+  Quads: [
+    { name: "Back Squat",
+      media: ["https://media.tenor.com/6lqMyUqSe9kAAAAC/squat-barbell.gif",
+              "https://media.tenor.com/6lqMyUqSe9kAAAPo/squat-barbell.mp4"] },
+    { name: "Leg Extension",
+      media: ["https://media.tenor.com/9aTzJwI8C2kAAAAC/leg-extension.gif",
+              "https://media.tenor.com/9aTzJwI8C2kAAAPo/leg-extension.mp4"] }
+  ],
+  Hamstrings: [
+    { name: "Romanian Deadlift",
+      media: ["https://media.tenor.com/7e4kqkWP8O0AAAAC/romanian-deadlift.gif",
+              "https://media.tenor.com/7e4kqkWP8O0AAAPo/romanian-deadlift.mp4"] },
+    { name: "Leg Curl",
+      media: ["https://media.tenor.com/h8o5e7QfGgYAAAAC/leg-curl.gif",
+              "https://media.tenor.com/h8o5e7QfGgYAAAPo/leg-curl.mp4"] }
+  ],
+  Glutes: [
+    { name: "Hip Thrust",
+      media: ["https://media.tenor.com/wiS3eK7pQ9sAAAAC/hip-thrust.gif",
+              "https://media.tenor.com/wiS3eK7pQ9sAAAPo/hip-thrust.mp4"] },
+    { name: "Step-up",
+      media: ["https://media.tenor.com/1m7vN0f4gBMAAAAC/step-ups.gif",
+              "https://media.tenor.com/1m7vN0f4gBMAAAAPo/step-ups.mp4"] }
+  ],
+  Calves: [
+    { name: "Standing Calf Raise",
+      media: ["https://media.tenor.com/i2mZb7x0fHoAAAAC/calf-raise.gif",
+              "https://media.tenor.com/i2mZb7x0fHoAAAPo/calf-raise.mp4"] },
+    { name: "Seated Calf Raise",
+      media: ["https://media.tenor.com/0sS5W-7h7r0AAAAC/calf-raise.gif",
+              "https://media.tenor.com/0sS5W-7h7r0AAAPo/calf-raise.mp4"] }
+  ],
+  Traps: [
+    { name: "Barbell Shrug",
+      media: ["https://media.tenor.com/5yRk9dQHFRgAAAAC/barbell-shrug.gif",
+              "https://media.tenor.com/5yRk9dQHFRgAAAPo/barbell-shrug.mp4"] },
+    { name: "Face Pull",
+      media: ["https://media.tenor.com/2Gm5oMDr6XMAAAAC/face-pull.gif",
+              "https://media.tenor.com/2Gm5oMDr6XMAAAAPo/face-pull.mp4"] }
+  ],
+  Lats: [
+    { name: "Lat Pulldown",
+      media: ["https://media.tenor.com/W0o3Q6B6S9AAAAAC/lat-pulldown.gif",
+              "https://media.tenor.com/W0o3Q6B6S9AAAAAPo/lat-pulldown.mp4"] },
+    { name: "Pull-up",
+      media: ["https://media.tenor.com/6wY60R9nYVIAAAAC/pullups.gif",
+              "https://media.tenor.com/6wY60R9nYVIAAAAPo/pullups.mp4"] }
+  ],
+  "Rear Delts": [
+    { name: "Reverse Fly",
+      media: ["https://media.tenor.com/4kSo_3u5PTAAAAAC/reverse-fly.gif",
+              "https://media.tenor.com/4kSo_3u5PTAAAAAPo/reverse-fly.mp4"] },
+    { name: "Face Pull",
+      media: ["https://media.tenor.com/2Gm5oMDr6XMAAAAC/face-pull.gif",
+              "https://media.tenor.com/2Gm5oMDr6XMAAAAPo/face-pull.mp4"] }
+  ],
+  Erectors: [
+    { name: "Back Extension",
+      media: ["https://media.tenor.com/0pP6U1rD1ooAAAAC/back-extension.gif",
+              "https://media.tenor.com/0pP6U1rD1ooAAAPo/back-extension.mp4"] },
+    { name: "Bird-Dog",
+      media: ["https://media.tenor.com/3F1n1ls5QtIAAAAC/bird-dog.gif",
+              "https://media.tenor.com/3F1n1ls5QtIAAAAPo/bird-dog.mp4"] }
+  ],
+};
+
+const UPPER = ["Chest","Shoulders","Biceps","Triceps","Forearms"];
+const CORE  = ["Abs","Obliques"];
+const LOWER = ["Quads","Hamstrings","Glutes","Calves"];
+const BACK  = ["Traps","Lats","Rear Delts","Erectors"];
+
+/* ---------- UI Wiring ---------- */
+const $ = s=>document.querySelector(s);
+const panel = $("#panel");
+const legend = $("#legend");
+
+function makeButton(name){
+  const btn = document.createElement("button");
+  btn.className = "btn";
+  btn.setAttribute("data-name", name);
+  btn.innerHTML = `<span>${name}<div class="muted">${(EX[name]||[]).length} exercises</div></span><span class="dot"></span>`;
+  btn.addEventListener("mouseenter", ()=>{ legend.textContent = name; setPanel(name, "Preview:", EX[name]||[]); });
+  btn.addEventListener("mouseleave", ()=>{ legend.textContent = ""; if(!btn.classList.contains("active")) { /* keep current if locked by click */ } });
+  btn.addEventListener("click", ()=>{
+    document.querySelectorAll(".btn").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    setPanel(name, "Suggested exercises:", EX[name]||[]);
+  });
+  return btn;
+}
+
+function mount(list, containerSel){
+  const cont = document.querySelector(containerSel);
+  list.forEach(n=>cont.appendChild(makeButton(n)));
+}
+
+mount(UPPER, "#upper-grid");
+mount(CORE,  "#core-grid");
+mount(LOWER, "#lower-grid");
+mount(BACK,  "#back-grid");
+
+/* ---------- Panel rendering ---------- */
+function setPanel(title, subtitle, items){
+  panel.innerHTML = `<h2>${title}</h2><p class="muted">${subtitle}</p>` +
+    (items?.length ? `<div class="ex-list">${items.map(renderEx).join("")}</div>` :
+      `<div class="empty">No exercises yet.</div>`);
+}
+
+function renderEx(x){
+  const sources = (x.media||[]).concat(PLACEHOLDER);
+  return `<div class="ex">
+    <figure>
+      <img loading="lazy" referrerpolicy="no-referrer" alt="${x.name}"
+           data-sources='${JSON.stringify(sources)}'
+           onerror="nextSrc(this)" onload="ensurePlayable(this)">
+    </figure>
+    <div><b>${x.name}</b><small class="muted">3–4 sets · 8–12 reps</small></div>
+  </div>`;
+}
+
+/* ---------- Media fallback logic ---------- */
+window.nextSrc = function(el){
+  const list = JSON.parse(el.getAttribute('data-sources'));
+  const current = el.getAttribute('src') || "";
+  const idx = Math.max(0, list.indexOf(current));
+  const next = list[idx+1] || PLACEHOLDER;
+  if (/\.(mp4|webm)$/i.test(next)) {
+    const fig = el.parentElement;
+    fig.innerHTML = `<video autoplay muted loop playsinline controlslist="nodownload noplaybackrate"
+                      preload="metadata" referrerpolicy="no-referrer">
+                      <source src="${next}" type="video/${next.endsWith('.webm')?'webm':'mp4'}">
+                    </video>`;
+  } else {
+    el.src = next;
+  }
+};
+window.ensurePlayable = function(el){
+  if (!el.getAttribute('src')) {
+    const list = JSON.parse(el.getAttribute('data-sources'));
+    el.src = list[0] || PLACEHOLDER;
+  }
+};
+
+// Default selection (optional)
+setPanel("Pick a muscle group", "Hover a group to preview. Click to lock.", []);
+</script>
+</body>
+</html>

@@ -1,0 +1,1609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <title>Gymso Fitness HTML Template</title>
+
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  <meta name="author" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <!-- Crisp Telugu & Hindi rendering -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Telugu:wght@400;700&family=Noto+Sans+Devanagari:wght@400;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="./css/bootstrap.min.css">
+  <link rel="stylesheet" href="./css/font-awesome.min.css">
+  <link rel="stylesheet" href="./css/aos.css">
+
+  <!-- MAIN CSS (original theme) -->
+  <link rel="stylesheet" href="./css/tooplate-gymso-style.css">
+
+  <!-- Leaflet CSS (for interactive map) -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+
+  <!-- Modern refinements + RS animation options -->
+  <style>
+    :root{ --accent:#e02121; --ink:#0e0e0e; }
+
+    html, body { height: 100%; }
+    body{
+      min-height:100vh; display:flex; flex-direction:column;
+      font-family:'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--ink); background:#0a0a0a;
+      -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+    }
+
+    /* ===== NAVBAR ===== */
+    .navbar{
+      backdrop-filter:saturate(160%) blur(10px);
+      background:rgba(0,0,0,.55) !important;
+      border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    .navbar .nav-link{ font-weight:600; letter-spacing:.2px; }
+    .navbar .nav-link:hover{ opacity:.85; }
+
+    /* ===== Brand base styles ===== */
+    .navbar .navbar-brand { position: relative; font-weight: 800; letter-spacing: .5px; color:#fff; }
+    .navbar .navbar-brand .rs{ margin-inline:.28em; transition:margin .35s ease, transform .25s ease; color:#e02121; }
+    .navbar .navbar-brand:hover .rs{ margin-inline:0; } /* collapse space on hover */
+    @media (max-width: 480px){ .navbar .navbar-brand .rs{ margin-inline:.2em; } }
+
+    .rs{ position:relative; display:inline-block; padding:0 .05em; }
+    .rs::after{
+      content:""; position:absolute; inset:-0.22em -0.28em;
+      border:2px solid #e02121; border-radius:6px; transform:scale(.92);
+      opacity:.98; box-shadow:0 0 0 rgba(224,33,33,0);
+      transition:opacity .25s, transform .25s, box-shadow .25s;
+    }
+
+    /* Neon pulse */
+    .rs.neon{ animation: neonText 2.6s ease-in-out infinite; }
+    .rs.neon::after{ animation: neonBox 2.6s ease-in-out infinite; }
+    @keyframes neonText{ 0%,100%{text-shadow:0 0 0 rgba(224,33,33,0); transform:translateY(0)} 50%{text-shadow:0 0 18px rgba(224,33,33,.55); transform:translateY(-1px)} }
+    @keyframes neonBox{ 0%,100%{box-shadow:0 0 0 rgba(224,33,33,0); transform:scale(.92)} 50%{box-shadow:0 10px 26px rgba(224,33,33,.45); transform:scale(1)} }
+
+    .navbar .navbar-brand:hover .rs-r{ transform:translateX(1px); }
+    .navbar .navbar-brand:hover .rs-s{ transform:translateX(-1px); }
+
+    /* Hide box on hover */
+    .navbar .navbar-brand:hover .rs::after, .navbar .navbar-brand .rs:hover::after{
+      opacity:0; transform:scale(.86); box-shadow:none; animation:none !important;
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      .rs, .rs::after, .rs::before{ animation:none !important; transform:none; box-shadow:none; }
+    }
+
+    /* ===== Sections ===== */
+    .section, .feature, .about, .class, .schedule, .contact{ position:relative; padding:90px 0; }
+    .section h2, .feature h2, .about h2, .class h2, .schedule h2, .contact h2{ font-weight:800; letter-spacing:.2px; }
+    .section h2::after, .feature h2::after, .about h2::after, .class h2::after, .schedule h2::after, .contact h2::after{
+      content:""; display:block; width:60px; height:3px; margin-top:10px;
+      background:linear-gradient(90deg,var(--accent),#ff5151); border-radius:999px;
+    }
+
+    html { scroll-behavior: smooth; }
+    #schedule { scroll-margin-top: 90px; }
+
+    /* ===== HERO ===== */
+    .hero{ min-height:100vh; background-position:center 40% !important; background-size:cover !important; background-repeat:no-repeat !important; position:relative; isolation:isolate; }
+    .hero .bg-overlay{ position:absolute; inset:0; background:
+      radial-gradient(1200px 600px at 50% 20%, rgba(255,255,255,.08), rgba(0,0,0,0) 60%),
+      linear-gradient(180deg, rgba(0,0,0,.05), rgba(0,0,0,.28)); pointer-events:none; z-index:0; }
+    .hero .hero-text{ position:relative; z-index:1; background:transparent; border:0; box-shadow:none; padding:0; }
+    .hero .hero-text h1{ line-height:1.15; text-shadow:0 6px 24px rgba(0,0,0,.35); }
+    .hero .hero-text h6{ font-size:clamp(12px,3.6vw,16px); line-height:1.25; margin-bottom:.5rem; letter-spacing:.5px; color:#fff; }
+    .hero .wrapper,.hero .typing-demo,.hero .cursor{ display:inline-block; white-space:nowrap; overflow:hidden; vertical-align:bottom; }
+    @media (max-width:360px){ .hero .hero-text h6{ font-size:clamp(11px,3.4vw,14px); } }
+
+    /* ====== SALAAR/SARKAAR flip chip ====== */
+    :root{ --flip-h: clamp(34px, 7vw, 68px); }
+    .flip-line{ display:inline-flex; align-items:baseline; gap:.35ch; flex-wrap:wrap; }
+    .flip-chip{ display:inline-block; height:var(--flip-h); overflow:hidden; vertical-align:baseline; }
+    .flip-chip .list{ display:flex; flex-direction:column; will-change:transform; animation:flipSlide 4.8s ease-in-out infinite; }
+    .flip-chip .list > div{
+      height:var(--flip-h); display:flex; align-items:center; justify-content:center;
+      padding:0 .6ch; color:var(--accent); background:#fff; border:2px solid var(--accent); border-radius:12px;
+      font-weight:900; letter-spacing:.08em;
+    }
+    @keyframes flipSlide{
+      0%,38%  { transform: translateY(0); }
+      50%,88% { transform: translateY(calc(-1 * var(--flip-h))); }
+      100%    { transform: translateY(calc(-2 * var(--flip-h))); }
+    }
+    @media (prefers-reduced-motion: reduce){ .flip-chip .list{ animation:none; } }
+
+    /* MORE TRANSPARENT FROST for SALAAR / SARKAAR */
+    .flip-chip .list > div{
+      height: var(--flip-h);
+      display: flex; align-items: center; justify-content: center;
+      padding: 0 .9ch; border-radius: 14px;
+
+      color: var(--accent);
+      font-weight: 900; letter-spacing: .08em;
+      text-shadow: 0 1px 0 rgba(255,255,255,.08);
+
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.12);
+      backdrop-filter: blur(14px) saturate(160%);
+      -webkit-backdrop-filter: blur(14px) saturate(160%);
+
+      box-shadow:
+        0 6px 18px rgba(0,0,0,.22),
+        inset 0 1px 0 rgba(255,255,255,.10);
+    }
+
+    /* Module primary buttons: white box + red text on hover */
+    .fx-actions .btn-solid:hover,
+    .fx-actions .btn-solid:focus {
+      background: #fff !important;
+      color: var(--accent) !important;
+      border-color: #fff !important;
+      box-shadow: 0 16px 36px rgba(255,255,255,.08),
+                  0 0 0 1px rgba(255,255,255,.06) inset;
+      transform: translateY(-2px);
+    }
+    .fx-actions .btn-solid:hover svg,
+    .fx-actions .btn-solid:focus svg {
+      color: var(--accent);
+      stroke: currentColor;
+      fill: currentColor;
+    }
+    .fx-actions .btn-solid:focus-visible {
+      outline: 2px solid #fff;
+      outline-offset: 2px;
+    }
+
+    /* Make the whole COMRADES logo turn red on hover */
+    .navbar .navbar-brand { transition: color .25s ease; }
+    .navbar .navbar-brand:hover,
+    .navbar .navbar-brand:focus { color: var(--accent) !important; }
+    .navbar .navbar-brand:hover .rs,
+    .navbar .navbar-brand:focus .rs { color: var(--accent) !important; }
+
+    /* subtle frost bloom, lighter than before */
+    .flip-chip .list > div::before{
+      content:"";
+      position:absolute; inset:0; border-radius:inherit;
+      background: radial-gradient(120% 90% at 12% -20%,
+                  rgba(255,255,255,.08), rgba(255,255,255,0) 60%);
+      pointer-events:none;
+    }
+
+    @media (hover:hover){
+      .flip-chip .list > div:hover,
+      .flip-chip .list > div:focus{
+        background: rgba(255,255,255,.10);
+        border-color: rgba(255,255,255,.18);
+        box-shadow: 0 10px 26px rgba(0,0,0,.26),
+                    inset 0 1px 0 rgba(255,255,255,.12);
+      }
+    }
+
+    .flip-chip .list > div::after{ display:none !important; }
+
+    /* ===== Feature card ===== */
+    .about-working-hours{
+      border-radius:16px !important; background:rgba(255,255,255,.06); backdrop-filter:blur(8px);
+      border:1px solid rgba(255,255,255,.1); box-shadow:0 10px 30px rgba(0,0,0,.25); padding:18px 16px;
+    }
+
+    /* ===== ABOUT carousel on white ===== */
+    .about .about-carousel{ border-radius:20px; overflow:hidden; box-shadow:0 24px 56px rgba(0,0,0,.35); }
+    .about .carousel-item{ position:relative; height:420px; padding:32px; background:
+      radial-gradient(700px 420px at 85% 10%, rgba(224,33,33,.12), transparent 60%),
+      linear-gradient(180deg,#ffffff,#f5f5f5); }
+    @media (max-width:576px){ .about .carousel-item{ height:300px; padding:22px; } }
+    .about .carousel-item img, .about .slide-overlay{ display:none !important; }
+    .about .slide-caption{ position:static; }
+    .quote-wrap{ max-width:820px; text-align:left; color:#000; }
+    .quote-mark{ font-size:68px; line-height:1; color:var(--accent); font-weight:900; margin-bottom:8px; }
+    .quote-text{ font-size:clamp(18px, 2.4vw, 28px); line-height:1.35; font-weight:800; color:#0f0f0f; letter-spacing:.2px; }
+    .quote-author{ margin-top:12px; font-weight:600; font-size:14px; letter-spacing:.3px; color:#444; opacity:.85; }
+
+    #about .col-lg-6 > h2, #about .col-lg-6 > p, #about .hi-card, #about .hi-card *, #about .hi-list li, #about .stat .small{ color:#0b0b0b !important; }
+    #about .col-lg-6 > h2 span{ color:#e02121 !important; }
+    .about .hi-card{ background:#fff; border:1px solid rgba(0,0,0,.06); border-radius:16px; padding:22px; box-shadow:0 16px 40px rgba(0,0,0,.2); }
+    .about .hi-list i{ color:var(--accent); margin-right:10px; font-size:1.1rem; line-height:1.6; }
+
+    /* Meters */
+    .stat .row + .row{ margin-top:12px; }
+    .meter{ display:flex; align-items:center; gap:10px; }
+    .meter .bar{ flex:1 1 auto; height:12px; border-radius:999px; background:#eee; overflow:hidden; position:relative; box-shadow:inset 0 1px 0 rgba(0,0,0,.05); }
+    .meter .bar > span{ height:100%; display:block; width:0%; background:linear-gradient(90deg,#ff4a4a,var(--accent)); border-radius:999px; box-shadow:0 4px 10px rgba(224,33,33,.25); }
+    .meter .pct{ min-width:44px; text-align:right; font-weight:800; font-size:12px; color:#0d0d0d; }
+
+    /* ======= MODULE CARDS (NO IMAGES) ======= */
+    .fx-grid{ display:grid; grid-template-columns:repeat(12,1fr); gap:18px; }
+    .fx-card{ grid-column:span 4; perspective:1000px; }
+    @media (max-width:991px){ .fx-card{ grid-column:span 12; } }
+    .fx-inner{
+      position:relative; border-radius:18px; padding:18px; overflow:hidden; will-change:transform;
+      background:
+        radial-gradient(120% 160% at 10% -20%, rgba(224,33,33,.15), transparent 60%),
+        linear-gradient(180deg, #101010, #0b0b0b);
+      box-shadow:0 16px 40px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.06);
+      transform-style:preserve-3d;
+      transition:transform .25s cubic-bezier(.2,.8,.2,1), box-shadow .25s;
+      pointer-events:auto;
+    }
+    .fx-inner::before{
+      content:""; position:absolute; inset:-2px; z-index:0; opacity:.25;
+      background:
+        repeating-linear-gradient(90deg, rgba(255,255,255,.04) 0 1px, transparent 1px 16px),
+        repeating-linear-gradient(0deg, rgba(255,255,255,.04) 0 1px, transparent 1px 16px);
+      animation:gridMove 8s linear infinite; pointer-events:none;
+    }
+    @keyframes gridMove{ 0%{ transform:translate3d(0,0,0);} 100%{ transform:translate3d(-16px,-16px,0);} }
+    .fx-inner::after{
+      content:""; position:absolute; inset:0; padding:1px; border-radius:18px; pointer-events:none;
+      background:conic-gradient(from 180deg, rgba(224,33,33,.95), rgba(224,33,33,.15), rgba(224,33,33,.95));
+      -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite:xor; mask-composite:exclude;
+      filter:drop-shadow(0 0 18px rgba(224,33,33,.15));
+      animation:outlinePulse 3.2s ease-in-out infinite;
+    }
+    @keyframes outlinePulse{ 0%,100%{ opacity:.9 } 50%{ opacity:.7 } }
+    .fx-card:hover .fx-inner{ transform:translateY(-4px) rotateX(2deg); box-shadow:0 26px 56px rgba(224,33,33,.18), inset 0 1px 0 rgba(255,255,255,.06); }
+    .fx-top{ position:relative; z-index:2; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+    .fx-badge{
+      font-size:12px; letter-spacing:.25px; color:#fff; padding:6px 10px; border-radius:999px;
+      border:1px solid rgba(224,33,33,.5);
+      background:radial-gradient(120% 220% at -20% -40%, rgba(224,33,33,.25), transparent 60%);
+      white-space:nowrap;
+    }
+    .fx-icon{
+      width:44px; height:44px; border-radius:12px; display:grid; place-items:center;
+      border:1px solid rgba(224,33,33,.45);
+      background:rgba(224,33,33,.08);
+      flex:0 0 44px; pointer-events:none; color:#fff;
+    }
+    .led{ position:absolute; width:8px; height:8px; border-radius:50%; background:var(--accent); filter:blur(0.2px); box-shadow:0 0 12px rgba(224,33,33,.8); pointer-events:none; }
+    .led.tl{ top:10px; left:10px; animation:led 1.6s ease-in-out infinite; }
+    .led.tr{ top:10px; right:10px; animation:led 1.6s .2s ease-in-out infinite; }
+    .led.bl{ bottom:10px; left:10px; animation:led 1.6s .4s ease-in-out infinite; }
+    .led.br{ bottom:10px; right:10px; animation:led 1.6s .6s ease-in-out infinite; }
+    @keyframes led{ 0%,100%{opacity:.25} 50%{opacity:.9} }
+    .fx-num{ color:#fff; font-weight:900; font-size:clamp(28px,5vw,40px); letter-spacing:.02em; margin:10px 0 4px; }
+    .fx-title{ color:#fff; font-weight:800; font-size:1.25rem; letter-spacing:.2px; margin:0 0 12px; }
+    .fx-sub{ color:#bdbdbd; margin:0 0 12px; }
+    .fx-list{ list-style:none; padding:0; margin:0; display:grid; gap:8px; }
+    .fx-list li{ display:flex; gap:10px; align-items:flex-start; color:#eaeaea; }
+    .fx-ico{ width:18px; height:18px; flex:0 0 18px; }
+    .fx-actions{ display:flex; flex-wrap:wrap; gap:10px; margin-top:14px; }
+    .btn-solid,.btn-ghost{
+      display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border-radius:12px; font-weight:700; text-decoration:none; color:#fff;
+      transition:transform .2s, box-shadow .2s, border-color .2s, background .2s; position:relative; z-index:10;
+    }
+    .btn-solid{ background:var(--accent); border:1px solid var(--accent); box-shadow:0 12px 24px rgba(224,33,33,.28); }
+    .btn-ghost{ background:#0d0d0d; border:1px solid rgba(224,33,33,.5); }
+    .btn-solid:hover,.btn-ghost:hover{ transform:translateY(-2px); box-shadow:0 16px 36px rgba(224,33,33,.25); }
+    .beam{ height:1px; margin:12px 0; background:linear-gradient(90deg, transparent, rgba(224,33,33,.5), transparent); opacity:.5; }
+
+    /* Schedule table */
+    .schedule-table{ background:rgba(255,255,255,.08); backdrop-filter:blur(6px); border-radius:14px; overflow:hidden; border:1px solid rgba(255,255,255,.12); }
+    .schedule-table thead th{ background:#111 !important; color:#fff; border-color:#1d1d1d; font-weight:800; letter-spacing:.3px; }
+    .schedule-table tbody td{ background:#0b0b0b; color:#eaeaea; border-color:#171717; }
+    .schedule-table tbody tr:hover td{ background:#111; }
+
+    /* Contact + Map */
+    .contact .webform, #gym-map{
+      background:rgba(255,255,255,.06); backdrop-filter:blur(8px);
+      border:1px solid rgba(255,255,255,.12); border-radius:16px; box-shadow:0 18px 40px rgba(0,0,0,.35); padding:16px;
+    }
+    .contact .webform .form-control{ background:#0b0b0b; color:#fff; border:1px solid #232323; }
+    .contact .webform .form-control::placeholder{ color:#9c9c9c; }
+    .contact .webform #submit-button{ background:#000; color:#fff; border:1px solid #000; transition:all .2s ease; }
+    .contact .webform #submit-button:hover{ background:var(--accent); border-color:var(--accent); transform:translateY(-1px); box-shadow:0 6px 16px rgba(224,33,33,.35); }
+
+    /* Map and list basics */
+    #gym-list li{ cursor:pointer; }
+    #gym-list li:hover{ background:#111; }
+    #gym-map{ height:320px; }
+
+    /* === Gym results themed in red (base) === */
+    #gym-list li{ color:#eaeaea; }
+    #gym-list li strong{ color:#e02121; }
+    #gym-status{ color:#e02121; }
+    #gym-list .btn-outline-dark{ border-color:#e02121; color:#e02121; }
+    #gym-list .btn-outline-dark:hover{ background:#e02121; border-color:#e02121; color:#fff; }
+    .leaflet-popup-content .popup-title{ color:#e02121; font-weight:800; }
+    .leaflet-popup-content-wrapper, .leaflet-popup-tip{ background:#0b0b0b; color:#eaeaea; border:1px solid #171717; }
+
+    /* ====== FUTURISTIC EFFECTS (results list) ====== */
+    #gym-list li{
+      position:relative;
+      border-radius:14px;
+      margin:8px 0;
+      padding:10px 12px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02)),
+        radial-gradient(120% 120% at -20% -20%, rgba(224,33,33,.06), transparent 60%);
+      border:1px solid rgba(224,33,33,.28);
+      box-shadow:0 10px 28px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.06);
+      transition:transform .25s cubic-bezier(.2,.8,.2,1), box-shadow .25s, border-color .25s;
+    }
+    #gym-list li::before{
+      content:"";
+      position:absolute; inset:0;
+      background:linear-gradient(120deg, transparent 45%, rgba(255,255,255,.5) 50%, transparent 55%);
+      transform:translateX(-130%);
+      opacity:.35; pointer-events:none;
+    }
+    #gym-list li:hover{ transform:translateY(-4px); border-color:rgba(224,33,33,.55); box-shadow:0 18px 44px rgba(224,33,33,.20); }
+    @keyframes resultLift { from { opacity:0; transform: translateY(10px) scale(.98); filter: blur(2px);} to{opacity:1; transform:none; filter:none;} }
+    @keyframes highlightSweep { from{ transform: translateX(-120%); opacity:.8;} to{ transform: translateX(120%); opacity:0;} }
+    #gym-list { overflow-x: hidden; }
+    #gym-list li { overflow: hidden; will-change: transform; }
+    body { overflow-x: hidden; }
+    #gym-status.scanning{ position:relative; padding-left:12px; color:#e02121; }
+    #gym-status.ping{ animation:textPulse 700ms ease-out; }
+    @keyframes textPulse{ 0%{ text-shadow:0 0 0 rgba(224,33,33,0);} 40%{ text-shadow:0 0 16px rgba(224,33,33,.55);} 100%{ text-shadow:0 0 0 rgba(224,33,33,0);} }
+    .scanbar{ height:4px; border-radius:3px; background:linear-gradient(90deg, rgba(0,0,0,0), var(--accent), rgba(0,0,0,0)); background-size:200% 100%; opacity:0; }
+    .scanbar.active{ opacity:1; animation: scanline 1s linear infinite; }
+    @keyframes scanline{ 0%{background-position:200% 0;} 100%{background-position:-200% 0;} }
+
+    /* ===== Scroll to top ===== */
+    #to-top{
+      position:fixed; right:18px; bottom:18px; width:44px; height:44px; border-radius:999px;
+      display:none; align-items:center; justify-content:center;
+      background:#111; color:#fff; border:1px solid #1f1f1f; box-shadow:0 10px 18px rgba(0,0,0,.35);
+      z-index:9999; cursor:pointer; transition:transform .2s ease, opacity .2s ease;
+    }
+    #to-top:hover{ transform:translateY(-2px); }
+    #to-top.show{ display:flex; opacity:1; }
+
+    /* ===== Cookie banner ===== */
+    .cookie-banner{
+      position:fixed; left:12px; right:12px; bottom:12px; z-index:10000;
+      background:#0f0f0f; color:#fff; border:1px solid #222; border-radius:14px; padding:14px 16px;
+      box-shadow:0 18px 44px rgba(0,0,0,.45);
+      display:none;
+    }
+    .cookie-banner.show{ display:block; }
+    .cookie-banner a{ color:#ff7b7b; text-decoration:underline; }
+
+    /* ======== SUGGESTION DROPDOWN (Find your gym) ======== */
+    .suggest-wrap { position: relative; }
+    .suggest-box{
+      position:absolute; left:0; right:0; top:100%; z-index:9990;
+      background:#0b0b0b; color:#eaeaea; border:1px solid #171717; border-radius:12px;
+      box-shadow:0 18px 44px rgba(0,0,0,.45), 0 0 0 1px rgba(224,33,33,.08) inset;
+      margin-top:6px; padding:6px; max-height:260px; overflow:auto; display:none;
+    }
+    .suggest-box.show{ display:block; }
+    .suggest-item{ display:flex; align-items:center; gap:10px; padding:10px 10px; border-radius:10px; cursor:pointer; border:1px solid transparent;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0)),
+        radial-gradient(60% 120% at -20% -20%, rgba(224,33,33,.06), transparent 60%); }
+    .suggest-item:hover, .suggest-item[aria-selected="true"]{ background:#101010; border-color:rgba(224,33,33,.45); box-shadow:0 8px 22px rgba(224,33,33,.18); }
+    .suggest-icon{ min-width:20px; text-align:center; opacity:.9; }
+    .suggest-title{ font-weight:700; color:#fff; }
+    .suggest-sub{ font-size:12px; color:#bdbdbd; }
+    .suggest-footer{ padding:6px 10px 2px; font-size:11px; color:#a8a8a8; text-align:right; }
+    .suggest-footer a{ color:#ff7b7b; text-decoration:underline; }
+
+    /* ======== Typewriter (hero subline) ======== */
+    .typing-line{
+      font-family: "Noto Sans Telugu","Noto Sans Devanagari","Inter",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      letter-spacing:.5px; white-space:nowrap; color:#fff;
+      font-size: clamp(18px, 5.2vw, 40px);
+      font-weight: 800;
+    }
+    .cursor-mini{
+      display:inline-block; width:1ch; color:#fff; user-select:none;
+      animation:blink 1s steps(1,end) infinite;
+      font-size: inherit; font-weight: 800;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+  </style>
+
+<!--
+Tooplate 2119 Gymso Fitness
+https://www.tooplate.com/view/2119-gymso-fitness
+-->
+</head>
+<body data-spy="scroll" data-target="#navbarNav" data-offset="50">
+
+  <!-- MENU BAR -->
+  <nav class="navbar navbar-expand-lg fixed-top">
+    <div class="container">
+
+      <a class="navbar-brand" href="index.html">
+        COM<span class="rs rs-r neon">R</span>ADE<span class="rs rs-s neon">S</span>
+      </a>
+
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false"
+          aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ml-lg-auto">
+              <li class="nav-item"><a href="#home" class="nav-link smoothScroll">Home</a></li>
+              <li class="nav-item"><a href="#about" class="nav-link smoothScroll">About Us</a></li>
+              <li class="nav-item"><a href="#class" class="nav-link smoothScroll">Modules</a></li>
+              <li class="nav-item"><a href="#schedule" class="nav-link smoothScroll">Schedules</a></li>
+              <li class="nav-item"><a href="#contact" class="nav-link smoothScroll">Contact</a></li>
+          </ul>
+
+          <ul class="social-icon ml-lg-3">
+              <li><a href="https://fb.com/tooplate" class="fa fa-facebook"></a></li>
+              <li><a href="#" class="fa fa-twitter"></a></li>
+              <li><a href="#" class="fa fa-instagram"></a></li>
+          </ul>
+      </div>
+
+    </div>
+  </nav>
+
+
+  <!-- HERO -->
+  <section class="hero d-flex flex-column justify-content-center align-items-center" id="home">
+    <div class="bg-overlay"></div>
+    <div class="container">
+      <div class="row">
+
+        <div class="col-lg-8 col-md-10 mx-auto col-12">
+          <div class="hero-text mt-5 text-center">
+
+            <!-- Multilingual typewriter (Telugu → backspace → Hindi → backspace → English → backspace) -->
+            <h6 data-aos="fade-up" data-aos-delay="300">
+              <span id="type-cycle" class="typing-line"></span>
+              <span class="cursor-mini" aria-hidden="true">|</span>
+            </h6>
+
+            <!-- Replaced nested H1 + typed block with flip chip -->
+            <h1 class="text-white" data-aos="fade-up" data-aos-delay="500">
+              Upgrade your body like
+              <span class="flip-line">
+                <span class="flip-chip" aria-label="Salaar / Sarkaar flip">
+                  <span class="list" aria-hidden="true">
+                    <div>SALAAR</div>
+                    <div>SARKAAR</div>
+                    <!-- duplicate first item for seamless loop -->
+                    <div>SALAAR</div>
+                  </span>
+                </span>
+              </span>
+            </h1>
+
+            <a href="#feature" class="btn custom-btn mt-3" data-aos="fade-up" data-aos-delay="600">Get started</a>
+            <a href="#about" class="btn custom-btn bordered mt-3" data-aos="fade-up" data-aos-delay="700">learn more</a>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <section class="feature" id="feature">
+    <div class="container">
+      <div class="row">
+
+        <div class="d-flex flex-column justify-content-center ml-lg-auto mr-lg-5 col-lg-5 col-md-6 col-12">
+          <h2 data-aos="fade-up" style="color:red;">New to the gym?</h2>
+          <h6 class="mb-4 text-white" data-aos="fade-up">No problem. We got you covered!</h6>
+          <p data-aos="fade-up" data-aos-delay="200" class="text-light">
+            We've bundled all the information regarding <a rel="nofollow" href="#class" style="color:red;">workouts</a>,
+            <a rel="nofollow" href="#class" style="color:red;">food</a> and
+            <a rel="nofollow" href="#class" style="color:red;">utilities</a> which covers all aspects to enhance fitness journey.
+          </p>
+        </div>
+
+        <div class="mr-lg-auto mt-3 col-lg-4 col-md-6 col-12">
+          <div class="about-working-hours">
+            <div>
+              <h2 class="mb-4 text-white" data-aos="fade-up" data-aos-delay="500">Best time to workout</h2>
+              <strong class="mt-3 d-block text-light" data-aos="fade-up" data-aos-delay="700">Morning</strong>
+              <p class="text-light" data-aos="fade-up" data-aos-delay="800">6:00 AM - 9:00 PM</p>
+              <strong class="mt-3 d-block text-light" data-aos="fade-up" data-aos-delay="700">Afternoon</strong>
+              <p class="text-light" data-aos="fade-up" data-aos-delay="800">12:00 PM - 3:00 PM</p>
+              <strong class="mt-3 d-block text-light" data-aos="fade-up" data-aos-delay="700">Evening</strong>
+              <p class="text-light" data-aos="fade-up" data-aos-delay="800">5:00 PM - 8:00 PM</p>
+              <a href="#schedule" class="btn custom-btn bg-color mt-3" data-aos="fade-up" data-aos-delay="300">Click here to know more</a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ABOUT -->
+  <section class="about section" id="about">
+    <div class="container">
+      <div class="row align-items-center">
+        <!-- Quote slider -->
+        <div class="col-lg-6 mb-4 mb-lg-0" data-aos="fade-right" data-aos-delay="200">
+          <div id="aboutCarousel" class="carousel slide about-carousel" data-ride="carousel" data-interval="4200">
+            <ol class="carousel-indicators">
+              <li data-target="#aboutCarousel" data-slide-to="0" class="active"></li>
+              <li data-target="#aboutCarousel" data-slide-to="1"></li>
+              <li data-target="#aboutCarousel" data-slide-to="2"></li>
+            </ol>
+            <div class="carousel-inner">
+              <div class="carousel-item active">
+                <div class="quote-wrap">
+                  <div class="quote-mark">“</div>
+                  <div class="quote-text">The only bad workout is the one you didn’t do.</div>
+                  <div class="quote-author">— Everyone who showed up</div>
+                </div>
+              </div>
+              <div class="carousel-item">
+                <div class="quote-wrap">
+                  <div class="quote-mark">“</div>
+                  <div class="quote-text">You don’t have to be extreme, just be consistent.</div>
+                  <div class="quote-author">— Progress over perfection</div>
+                </div>
+              </div>
+              <div class="carousel-item">
+                <div class="quote-wrap">
+                  <div class="quote-mark">“</div>
+                  <div class="quote-text">Stronger than yesterday. One more rep. One more step.</div>
+                  <div class="quote-author">— Your future self</div>
+                </div>
+              </div>
+            </div>
+
+            <a class="carousel-control-prev" href="#aboutCarousel" role="button" data-slide="prev" aria-label="Previous slide">
+              <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            </a>
+            <a class="carousel-control-next" href="#aboutCarousel" role="button" data-slide="next" aria-label="Next slide">
+              <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Text / highlights -->
+        <div class="col-lg-6" data-aos="fade-left" data-aos-delay="300">
+          <h2 class="mb-3">Hello <span style="color:#e02121;">COMRADES</span></h2>
+          <p class="mb-3">
+            We’re fitness enthusiasts sharing what we’ve learned to help you build a stronger, healthier body. From bulking and lean gains to weight loss and recomposition, we offer workouts, nutrition, and simple tools that fit your life.
+          </p>
+
+          <div class="hi-card mt-3">
+            <ul class="hi-list list-unstyled mb-2">
+              <li><i class="fa fa-check-circle"></i> Personalized programs for every goal & experience level</li>
+              <li><i class="fa fa-check-circle"></i> Science-backed training split options (Full Body, UL, PPL)</li>
+              <li><i class="fa fa-check-circle"></i> Nutrition facts and recipes</li>
+            </ul>
+
+            <!-- Animated meters -->
+            <div class="stat">
+              <div class="row align-items-center">
+                <div class="col-6 small">Individual Progress</div>
+                <div class="col-6">
+                  <div class="meter">
+                    <div class="bar"><span id="bar-success"></span></div>
+                    <div class="pct" id="pct-success" aria-live="polite">0%</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row align-items-center">
+                <div class="col-6 small">Pure Adherence</div>
+                <div class="col-6">
+                  <div class="meter">
+                    <div class="bar"><span id="bar-adherence"></span></div>
+                    <div class="pct" id="pct-adherence" aria-live="polite">0%</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row align-items-center">
+                <div class="col-6 small">Overall Satisfaction</div>
+                <div class="col-6">
+                  <div class="meter">
+                    <div class="bar"><span id="bar-satisfaction"></span></div>
+                    <div class="pct" id="pct-satisfaction" aria-live="polite">0%</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- /Animated meters -->
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- CLASS (NO IMAGES) -->
+  <section class="class section" id="class">
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-12 col-12 text-center mb-5">
+          <h6 data-aos="fade-up" class="text-light">Get A Perfect Body</h6>
+          <h2 data-aos="fade-up" data-aos-delay="200" class="text-white">Our Website Offers</h2>
+        </div>
+      </div>
+
+      <div class="fx-grid">
+        <!-- Card 1 -->
+        <article class="fx-card" data-aos="zoom-in-up" data-aos-delay="100">
+          <div class="fx-inner">
+            <span class="led tl"></span><span class="led tr"></span><span class="led bl"></span><span class="led br"></span>
+            <div class="fx-top">
+              <span class="fx-badge">Programs</span>
+              <div class="fx-icon" aria-hidden="true">
+                <!-- Dumbbell icon -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 14v-4M7 17v-10M17 17v-10M20 14v-4"/>
+                  <rect x="9" y="10.5" width="6" height="3" rx="1.5"/>
+                </svg>
+              </div>
+            </div>
+
+            <div class="fx-num">01</div>
+            <h3 class="fx-title">Workout Types</h3>
+            <p class="fx-sub">Clear splits with progressions and smart swaps for limited equipment.</p>
+
+            <ul class="fx-list">
+              <li>
+                <svg class="fx-ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20.3 5.7a1 1 0 0 1 0 1.4l-9.6 9.6a1 1 0 0 1-1.4 0L3.7 11a1 1 0 1 1 1.4-1.4l4.2 4.2 8.9-8.9a1 1 0 0 1 1.4 0z"/></svg>
+                Full Body • Upper/Lower • PPL
+              </li>
+              <li>
+                <svg class="fx-ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20.3 5.7a1 1 0 0 1 0 1.4l-9.6 9.6a1 1 0 0 1-1.4 0L3.7 11a1 1 0 1 1 1.4-1.4l4.2 4.2 8.9-8.9a1 1 0 0 1 1.4 0z"/></svg>
+                RPE/RIR targets &amp; deloads
+              </li>
+              <li>
+                <svg class="fx-ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20.3 5.7a1 1 0 0 1 0 1.4l-9.6 9.6a1 1 0 0 1-1.4 0L3.7 11a1 1 0 1 1 1.4-1.4l4.2 4.2 8.9-8.9a1 1 0 0 1 1.4 0z"/></svg>
+                Beginner → Advanced paths
+              </li>
+            </ul>
+
+            <div class="beam"></div>
+            <div class="fx-actions">
+              <a class="btn-solid" href="WorkoutSplits.html" target="_blank" rel="noopener">Open Workouts</a>
+              <a class="btn-ghost" href="#schedule">See Timetable</a>
+            </div>
+          </div>
+        </article>
+
+        <!-- Card 2 -->
+        <article class="fx-card" data-aos="zoom-in-up" data-aos-delay="180">
+          <div class="fx-inner">
+            <span class="led tl"></span><span class="led tr"></span><span class="led bl"></span><span class="led br"></span>
+            <div class="fx-top">
+              <span class="fx-badge">Nutrition</span>
+              <div class="fx-icon" aria-hidden="true">
+                <!-- Apple icon -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M16.5 2c-1.8 0-3 .9-3.8 2.2-.9 1.3-.9 2.9 0 4.2 1.2 0 2.5-.5 3.4-1.4S17.7 4.4 17.7 3.2c-.3-.7-.6-1.2-1.2-1.2z"/>
+                  <path d="M12.2 7.5c-1.2-.7-2.7-.9-4-.5-2.4.6-4.3 2.8-4.6 5.4-.3 2.6 1.1 5.1 3.5 6.2 1.1.5 2.3.6 3.4.4 1.1-.2 2.1-.8 2.9-1.6.8.8 1.8 1.4 2.9 1.6 1.1.2 2.3.1 3.4-.4 2.4-1.1 3.8-3.6 3.5-6.2-.3-2.6-2.2-4.8-4.6-5.4-1.3-.3-2.8-.2-4 .5"/>
+                </svg>
+              </div>
+            </div>
+
+            <div class="fx-num">02</div>
+            <h3 class="fx-title">Nutrition &amp; Food</h3>
+            <p class="fx-sub">Macros made simple with budget-friendly, high-protein meals.</p>
+
+            <ul class="fx-list">
+              <li><svg class="fx-ico" viewBox="0 0 24 24"><path fill="currentColor" d="M20.3 5.7a1 1 0 0 1 0 1.4l-9.6 9.6a1 1 0 0 1-1.4 0L3.7 11a1 1 0 1 1 1.4-1.4l4.2 4.2 8.9-8.9a1 1 0 0 1 1.4 0z"/></svg>
+                Cut • Bulk • Recomp templates</li>
+              <li><svg class="fx-ico" viewBox="0 0 24 24"><path fill="currentColor" d="M20.3 5.7a1 1 0 0 1 0 1.4l-9.6 9.6a1 1 0 0 1-1.4 0L3.7 11a1 1 0 1 1 1.4-1.4l4.2 4.2 8.9-8.9a1 1 0 0 1 1.4 0z"/></svg>
+                Grocery lists &amp; swaps</li>
+              <li><svg class="fx-ico" viewBox="0 0 24 24"><path fill="currentColor" d="M20.3 5.7a1 1 0 0 1 0 1.4l-9.6 9.6a1 1 0 0 1-1.4 0L3.7 11a1 1 0 1 1 1.4-1.4l4.2 4.2 8.9-8.9a1 1 0 0 1 1.4 0z"/></svg>
+                Eating-out strategies</li>
+            </ul>
+
+            <div class="beam"></div>
+            <div class="fx-actions">
+              <a class="btn-solid" href="foodAndNutrition.html" target="_blank" rel="noopener">Open Nutrition</a>
+              <a class="btn-ghost" href="#contact" target="_blank">Food and Facts</a>
+            </div>
+          </div>
+        </article>
+
+        <!-- Card 3 -->
+        <article class="fx-card" data-aos="zoom-in-up" data-aos-delay="260">
+          <div class="fx-inner">
+            <span class="led tl"></span><span class="led tr"></span><span class="led bl"></span><span class="led br"></span>
+            <div class="fx-top">
+              <span class="fx-badge">Tools</span>
+              <div class="fx-icon" aria-hidden="true">
+                <!-- Sliders icon -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="4" y1="6" x2="20" y2="6"/>
+                  <line x1="4" y1="12" x2="20" y2="12"/>
+                  <line x1="4" y1="18" x2="20" y2="18"/>
+                  <circle cx="9" cy="6" r="2"/>
+                  <circle cx="15" cy="12" r="2"/>
+                  <circle cx="11" cy="18" r="2"/>
+                </svg>
+              </div>
+            </div>
+
+            <div class="fx-num">03</div>
+            <h3 class="fx-title">Workout Utilities</h3>
+            <p class="fx-sub">Quick calculators and trackers that save your inputs.</p>
+
+            <ul class="fx-list">
+              <li><svg class="fx-ico" viewBox="0 0 24 24"><path fill="currentColor" d="M20.3 5.7a1 1 0 0 1 0 1.4l-9.6 9.6a1 1 0 0 1-1.4 0L3.7 11a1 1 0 1 1 1.4-1.4l4.2 4.2 8.9-8.9a1 1 0 0 1 1.4 0z"/></svg>
+                1RM estimator &amp; plate math</li>
+              <li><svg class="fx-ico" viewBox="0 0 24 24"><path fill="currentColor" d="M20.3 5.7a1 1 0 0 1 0 1.4l-9.6 9.6a1 1 0 0 1-1.4 0L3.7 11a1 1 0 1 1 1.4-1.4l4.2 4.2 8.9-8.9a1 1 0 0 1 1.4 0z"/></svg>
+                RPE chart &amp; timers</li>
+              <li><svg class="fx-ico" viewBox="0 0 24 24"><path fill="currentColor" d="M20.3 5.7a1 1 0 0 1 0 1.4l-9.6 9.6a1 1 0 0 1-1.4 0L3.7 11a1 1 0 1 1 1.4-1.4l4.2 4.2 8.9-8.9a1 1 0 0 1 1.4 0z"/></svg>
+                Exportable logs (CSV)</li>
+            </ul>
+
+            <div class="beam"></div>
+            <div class="fx-actions">
+              <a class="btn-solid" href="gymUtilities.html" target="_blank" rel="noopener">Open Utilities</a>
+              <a class="btn-ghost" href="gymUtilities.html" target="_blank">Explore Features</a>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- SCHEDULE -->
+  <section class="schedule section" id="schedule">
+    <div class="container">
+      <div class="row">
+
+        <div class="col-lg-12 col-12 text-center">
+          <h6 data-aos="fade-up" class="text-light">our weekly GYM schedules</h6>
+          <h2 class="text-white" data-aos="fade-up" data-aos-delay="200">Workout Timetable</h2>
+        </div>
+
+        <div class="col-lg-12 py-5 col-md-12 col-12">
+          <table class="table table-bordered table-responsive schedule-table" data-aos="fade-up" data-aos-delay="300">
+            <thead class="thead-light">
+              <th><i class="fa fa-calendar"></i></th>
+              <th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th>
+            </thead>
+            <tbody>
+              <tr>
+                <td><a href="WorkoutSplits.html" target="_blank"><strong>Total Body Splits</strong></a></td>
+                <td><span>Full Body</span></td><td><span>Rest</span></td><td><span>Full Body</span></td>
+                <td><span>Rest</span></td><td><span>Full Body</span></td><td><span>Rest</span></td>
+              </tr>
+              <tr>
+                <td><a href="WorkoutSplits.html" target="_blank"><strong>Upper/Lower Splits</strong></a></td>
+                <td><span>Upper Body</span></td><td><span>Lower Body</span></td><td><span>Rest</span></td>
+                <td><span>Upper Body</span></td><td><span>Lower Body</span></td><td><span>Rest</span></td>
+              </tr>
+              <tr>
+                <td><a href="WorkoutSplits.html" target="_blank"><strong>Push-Pull-Legs</strong></a></td>
+                <td><span>Push</span></td><td><span>Pull</span></td><td><span>Legs</span></td>
+                <td><span>Push</span></td><td><span>Pull</span></td><td><span>Legs</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- CONTACT -->
+  <section class="contact section" id="contact">
+    <div class="container">
+      <div class="row">
+
+        <div class="ml-auto col-lg-5 col-md-6 col-12">
+          <h2 class="mb-4 pb-2 text-white" data-aos="fade-up" data-aos-delay="200">Feel free to ask anything</h2>
+
+          <form action="#" method="post" class="contact-form webform" data-aos="fade-up" data-aos-delay="400" role="form">
+            <input type="text" class="form-control" name="cf-name" placeholder="Name" required>
+            <input type="email" class="form-control" name="cf-email" placeholder="Email" required>
+            <textarea class="form-control" rows="5" name="cf-message" placeholder="Message" required></textarea>
+            <small class="form-text text-muted mb-2">By submitting, you agree to our <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a> and <a href="terms.html" target="_blank" rel="noopener">Terms</a>.</small>
+            <button type="submit" class="form-control" id="submit-button" name="submit">Send Message</button>
+          </form>
+
+          <!-- Inline feedback area -->
+          <div id="contact-feedback" class="mt-3" aria-live="polite"></div>
+        </div>
+
+        <!-- Interactive Nearest Gym Finder -->
+        <div class="mx-auto mt-4 mt-lg-0 mt-md-0 col-lg-5 col-md-6 col-12">
+          <h2 class="mb-4 text-white" data-aos="fade-up" data-aos-delay="600">Find <span style="color:#e02121;">gyms </span> near you</h2>
+
+          <!-- Searching progress bar -->
+          <div id="scan-bar" class="scanbar" aria-hidden="true"></div>
+
+          <div class="mb-3" data-aos="fade-up" data-aos-delay="700">
+            <div class="suggest-wrap">
+              <input id="location-input" type="text" class="form-control" placeholder="Search a place or address (optional)" aria-autocomplete="list" aria-expanded="false" aria-owns="suggest-box" aria-haspopup="listbox">
+              <!-- Suggestions -->
+              <div id="suggest-box" class="suggest-box" role="listbox" aria-label="Location suggestions"></div>
+            </div>
+            <button id="search-btn" class="btn btn-dark btn-block mt-2" type="button" title="Search">Search</button>
+
+            <div class="d-flex flex-wrap align-items-center mt-2">
+              <button id="locate-btn" class="btn btn-dark mr-2 mb-2" type="button" title="Use my location">Use my location</button>
+              <label class="mb-2 small text-muted">Radius:
+                <select id="radius-select" class="ml-1 custom-select custom-select-sm" style="width:auto; display:inline-block;">
+                  <option value="1500">1.5 km</option>
+                  <option value="3000" selected>3 km</option>
+                  <option value="5000">5 km</option>
+                  <option value="10000">10 km</option>
+                </select>
+              </label>
+
+              <!-- Open-now filter (hidden if opening_hours unavailable) -->
+              <div id="open-now-wrap" class="form-check ml-auto mb-2 d-none">
+                <input class="form-check-input" type="checkbox" id="open-now">
+                <label class="form-check-label text-light small" for="open-now">Open now</label>
+              </div>
+            </div>
+          </div>
+
+          <div id="gym-map" class="rounded" data-aos="fade-up" data-aos-delay="800"></div>
+
+          <div class="mt-3" data-aos="fade-up" data-aos-delay="900">
+            <h6 class="text-white">Nearby gyms</h6>
+            <ul id="gym-list" class="list-unstyled mb-0" style="max-height:220px; overflow:auto;"></ul>
+            <p id="gym-status" class="small mt-2"></p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="py-4 mt-auto" style="border-top:1px solid rgba(255,255,255,.08); background:#0b0b0b;">
+    <div class="container d-flex flex-wrap align-items-center justify-content-between">
+      <div class="text-light small">© <span id="year"></span> COMRADES</div>
+      <div class="small">
+        <a class="text-light" href="privacy.html" target="_blank" rel="noopener">Privacy</a>
+        <span class="mx-2 text-muted">•</span>
+        <a class="text-light" href="terms.html" target="_blank" rel="noopener">Terms</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scroll to top -->
+  <button id="to-top" aria-label="Back to top" title="Back to top"><i class="fa fa-arrow-up" aria-hidden="true"></i></button>
+
+  <!-- Cookie banner -->
+  <div id="cookie-banner" class="cookie-banner" role="dialog" aria-live="polite" aria-label="Cookie consent">
+    <div class="d-flex flex-column flex-md-row align-items-md-center">
+      <div class="flex-fill pr-md-3">
+        We use privacy-friendly analytics to improve the site. No ads. Read our
+        <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>.
+      </div>
+      <div class="mt-3 mt-md-0">
+        <button id="cookie-accept" class="btn btn-sm btn-light mr-2">Allow analytics</button>
+        <button id="cookie-reject" class="btn btn-sm btn-outline-light">Decline</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal fade" id="membershipForm" tabindex="-1" role="dialog" aria-labelledby="membershipFormLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 class="modal-title" id="membershipFormLabel">Membership Form</h2>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        </div>
+        <div class="modal-body">
+          <form class="membership-form webform" role="form">
+            <input type="text" class="form-control" name="cf-name" placeholder="John Doe" required>
+            <input type="email" class="form-control" name="cf-email" placeholder="Johndoe@gmail.com" required>
+            <input type="tel" class="form-control" name="cf-phone" placeholder="123-456-7890" pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}" required>
+            <textarea class="form-control" rows="3" name="cf-message" placeholder="Additional Message"></textarea>
+            <div class="custom-control custom-checkbox my-2">
+              <input type="checkbox" class="custom-control-input" id="signup-agree" required>
+              <label class="custom-control-label text-small text-muted" for="signup-agree">I agree to the <a href="terms.html" target="_blank" rel="noopener">Terms &amp; Conditions</a></label>
+            </div>
+            <button type="submit" class="form-control" id="submit-button" name="submit">Submit</button>
+          </form>
+        </div>
+        <div class="modal-footer"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPTS -->
+  <script src="./js/jquery.min.js"></script>
+  <script src="./js/bootstrap.min.js"></script>
+  <script src="./js/aos.js"></script>
+  <script src="./js/smoothscroll.js"></script>
+  <script src="./js/custom.js"></script>
+
+  <!-- EmailJS -->
+  <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
+  <script>
+    (function(){ emailjs.init("9OySHzMdx2nloLxbO"); })();
+
+    const feedbackEl = document.getElementById('contact-feedback');
+    function showFeedback(type, text){
+      if(!feedbackEl) return;
+      const isSuccess = type==='success';
+      const icon = isSuccess ? 'fa-check-circle' : 'fa-exclamation-triangle';
+      const cls = isSuccess ? 'alert-success' : 'alert-danger';
+      feedbackEl.innerHTML = `
+        <div class="alert ${cls} success-pop mb-0" role="alert" tabindex="-1">
+          <div class="d-flex align-items-start">
+            <i class="fa ${icon} mr-2" aria-hidden="true" style="font-size:1.25rem;"></i>
+            <div><strong>${isSuccess?'Message sent!':'Something went wrong'}</strong><br/><span>${text}</span></div>
+          </div>
+        </div>`;
+      const card = feedbackEl.querySelector('.alert');
+      if(card){
+        card.focus({preventScroll:true});
+        card.scrollIntoView({behavior:'smooth', block:'nearest'});
+        setTimeout(()=>{ if(feedbackEl.contains(card)){ card.classList.add('fade'); setTimeout(()=>{ feedbackEl.innerHTML=''; },300);} },6000);
+      }
+    }
+
+    const contactForm = document.querySelector(".contact-form");
+    if(contactForm){
+      contactForm.addEventListener("submit", function(e) {
+        e.preventDefault();
+        emailjs.sendForm("service_bh0f8vc", "template_435vspe", this)
+          .then(()=>{ showFeedback('success',"Thanks for reaching out. We'll get back to you shortly."); this.reset(); })
+          .catch((error)=>{ console.error("EmailJS Error:", error); showFeedback('error',"Please try again, or email us directly at hello@company.co."); });
+      });
+    }
+  </script>
+
+  <!-- Leaflet JS (map) -->
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+
+  <!-- Map Finder + Animated meters + Futuristic animations + Searching bar + FAST SUGGESTIONS -->
+  <script>
+  (function(){
+    /* ======= MAP: nearest gym finder ======= */
+    const mapEl=document.getElementById('gym-map');
+    const listEl=document.getElementById('gym-list');
+    const statusEl=document.getElementById('gym-status');
+    const locateBtn=document.getElementById('locate-btn');
+    const searchBtn=document.getElementById('search-btn');
+    const radiusSel=document.getElementById('radius-select');
+    const inputEl=document.getElementById('location-input');
+    const suggestBox=document.getElementById('suggest-box');
+    const scanBar=document.getElementById('scan-bar'); // progress bar
+    const openNowWrap=document.getElementById('open-now-wrap');
+    const openNowCb=document.getElementById('open-now');
+
+    if(mapEl){
+      const map=L.map(mapEl,{zoomControl:true});
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{ attribution:'&copy; OpenStreetMap contributors' }).addTo(map);
+      map.setView([20,0],2);
+      const markersLayer=L.layerGroup().addTo(map);
+      let userMarker=null;
+
+      /* === Radius circle === */
+      let radiusCircle=null;
+      function drawRadius(lat, lon, meters){
+        if (radiusCircle) { map.removeLayer(radiusCircle); }
+        radiusCircle = L.circle([lat, lon], {
+          radius: meters,
+          color: '#e02121',
+          weight: 1,
+          opacity: 0.9,
+          fillColor: '#e02121',
+          fillOpacity: 0.06
+        }).addTo(map);
+      }
+
+      const quotesFound=["Small steps every day lead to big changes.","You don’t have to be extreme, just consistent.","The only bad workout is the one you didn’t do.","Stronger than yesterday.","One hour a day keeps the excuses away."];
+      const quotesNone=["No gym nearby? Your bodyweight is a full gym—start where you are.","If the place is far, the discipline is close.","No equipment, no problem—commitment is the best machine.","Make your space your gym until you find one.","The journey doesn’t wait for the perfect location."];
+      const pick=arr=>arr[Math.floor(Math.random()*arr.length)];
+
+      const distMeters=(a,b)=>{ const toRad=d=>d*Math.PI/180, R=6371000;
+        const dLat=toRad(b.lat-a.lat), dLon=toRad(b.lng-a.lng);
+        const lat1=toRad(a.lat), lat2=toRad(b.lat);
+        const x=Math.sin(dLat/2)**2 + Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLon/2)**2;
+        return 2*R*Math.asin(Math.sqrt(x));
+      };
+
+      function setUserLocation(lat,lon,zoom=14){
+        if(userMarker) map.removeLayer(userMarker);
+        userMarker=L.marker([lat,lon],{title:'You are here'}).bindPopup('You are here').addTo(map);
+        map.setView([lat,lon],zoom);
+      }
+
+      async function fetchGyms(lat,lon,radius){
+        const query=`[out:json][timeout:25];
+          (
+            node["leisure"="fitness_centre"](around:${radius},${lat},${lon});
+            way["leisure"="fitness_centre"](around:${radius},${lat},${lon});
+            node["amenity"="gym"](around:${radius},${lat},${lon});
+            way["amenity"="gym"](around:${radius},${lat},${lon});
+          ); out center 80;`.trim();
+
+        const endpoints=[
+          'https://overpass-api.de/api/interpreter',
+          'https://overpass.kumi.systems/api/interpreter'
+        ];
+        for(const url of endpoints){
+          const res=await fetch(url,{method:'POST',body:query,headers:{'Content-Type':'text/plain;charset=UTF-8'}});
+          if(res.ok){ const data=await res.json(); return data.elements||[]; }
+        }
+        throw new Error('Overpass endpoints failed');
+      }
+
+      /* === opening_hours: basic parser for common patterns === */
+      const dayIdxToCode = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+      function parseTime(s){ const m=/^(\d{1,2}):?(\d{2})$/.exec(s); if(!m) return null; const h=+m[1], mi=+m[2]; return h*60+mi; }
+      function expandDays(part){
+        const pieces = part.split(',').map(x=>x.trim()).filter(Boolean);
+        const days = new Set();
+        for(const p of pieces){
+          const r=/^(Mo|Tu|We|Th|Fr|Sa|Su)(?:\s*-\s*(Mo|Tu|We|Th|Fr|Sa|Su))?$/.exec(p);
+          if(r){
+            const start=dayIdxToCode.indexOf(r[1]);
+            const end=r[2]?dayIdxToCode.indexOf(r[2]):start;
+            let i=start;
+            while(true){ days.add(i); if(i===end) break; i=(i+1)%7; }
+          }
+        }
+        return days;
+      }
+      function isOpenNow(oh, now=new Date()){
+        if(!oh || typeof oh!=='string') return null;
+        const weekday = now.getDay();
+        const minutesNow = now.getHours()*60 + now.getMinutes();
+        const rules = oh.split(';').map(s=>s.trim()).filter(Boolean);
+        let anyMatch = false;
+        for(const rule of rules){
+          if(rule === '24/7' || rule.toLowerCase()==='24/7'){ return true; }
+          const parts = rule.split(/\s+/);
+          if(parts.length < 2) continue;
+          const daySpec = [];
+          let i=0;
+          while(i<parts.length && /^(Mo|Tu|We|Th|Fr|Sa|Su|,|-)+$/.test(parts[i].replace(/\s/g,''))){
+            daySpec.push(parts[i]); i++;
+          }
+          const times = parts.slice(i).join(' ').split(',').map(x=>x.trim());
+          const daysSet = expandDays(daySpec.join(' '));
+          if(daysSet.size===0){ daysSet.add(0);daysSet.add(1);daysSet.add(2);daysSet.add(3);daysSet.add(4);daysSet.add(5);daysSet.add(6); }
+          if(!daysSet.has(weekday)) continue;
+          anyMatch = true;
+          for(const tr of times){
+            const m=/^(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})$/.exec(tr);
+            if(!m) continue;
+            let start=parseTime(m[1]); let end=parseTime(m[2]);
+            if(end < start){
+              if(minutesNow>=start || minutesNow<end) return true;
+            }else{
+              if(minutesNow>=start && minutesNow<end) return true;
+            }
+          }
+        }
+        return anyMatch ? false : null;
+      }
+
+      /* === Magnetic hover for buttons === */
+      function magnetic(node){
+        const strength = 10; // px
+        node.addEventListener('mousemove', (e)=>{
+          const r = node.getBoundingClientRect();
+          const x = ((e.clientX - r.left) / r.width - 0.5) * 2;
+          const y = ((e.clientY - r.top)  / r.height - 0.5) * 2;
+          node.style.transform = `translate(${x*strength}px, ${y*strength}px)`;
+        });
+        node.addEventListener('mouseleave', ()=>{ node.style.transform = 'translate(0,0)'; });
+      }
+      const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      function clearResults(){ markersLayer.clearLayers(); listEl.innerHTML=''; statusEl.textContent=''; }
+
+      function renderResults(elements,origin, openOnly){
+        clearResults();
+        if(!elements.length){
+          statusEl.innerHTML='No gyms found in this area. Try increasing the radius.'+'<br/><em>“'+pick(quotesNone)+'”</em>';
+          return;
+        }
+
+        const points=elements.map(el=>{
+          const lat=el.lat||(el.center&&el.center.lat), lon=el.lon||(el.center&&el.center.lon);
+          const tags=el.tags||{};
+          const name=tags.name||'Gym';
+          const phone=tags.phone||tags['contact:phone']||'';
+          const website=tags.website||tags['contact:website']||'';
+          const addrParts=[tags['addr:housenumber'],tags['addr:street'],tags['addr:city'],tags['addr:state']].filter(Boolean);
+          const address=addrParts.join(', ');
+          const dist=origin?Math.round(distMeters(origin,{lat,lng:lon})):null;
+          const oh = tags.opening_hours || '';
+          const openState = isOpenNow(oh);
+          return {lat,lon,name,phone,website,address,dist,oh,openState};
+        }).filter(p=>p.lat&&p.lon)
+          .filter(p=> openOnly ? (p.openState===true) : true);
+
+        if(origin) points.sort((a,b)=>(a.dist??0)-(b.dist??0));
+        const bounds=[];
+        points.forEach((p,i)=>{
+          const marker=L.marker([p.lat,p.lon]).addTo(markersLayer);
+          const gmaps=`https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lon}`;
+          const websiteLink=p.website?`<a href="${p.website}" target="_blank" rel="noopener">Website</a>`:'';
+          const phoneText=p.phone?`📞 ${p.phone}`:'';
+          const addrText=p.address?`📍 ${p.address}`:'';
+          const distText=(p.dist!=null)?`🧭 ${(p.dist/1000).toFixed(2)} km`:``;
+          const openBadge = (p.openState===true) ? '🟢 Open' : (p.openState===false ? '🔴 Closed' : '');
+
+          marker.bindPopup(
+            `<strong class="popup-title">${p.name}</strong><br/>`+
+            `${[addrText,phoneText,distText,openBadge].filter(Boolean).join('<br/>')}`+
+            `${p.oh?`<br/><small>Hours: ${p.oh}</small>`:''}`+
+            `<br/><a href="${gmaps}" target="_blank" rel="noopener">Directions</a>${p.website?' • '+websiteLink:''}`
+          );
+
+          bounds.push([p.lat,p.lon]);
+
+          const li=document.createElement('li');
+          li.className='py-2 border-bottom';
+          li.innerHTML=`
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <strong>${i+1}. ${p.name}</strong>
+                ${p.address?`<div class="small text-muted">${p.address}</div>`:''}
+                ${p.dist!=null?`<div class="small">~ ${(p.dist/1000).toFixed(2)} km</div>`:''}
+                ${p.openState!==null?`<div class="small">${p.openState?'<span style="color:#34d058;">● Open now</span>':'<span style="color:#ff6b6b;">● Closed</span>'}</div>`:''}
+                ${p.oh?`<div class="small text-muted">Hours: ${p.oh}</div>`:''}
+              </div>
+              <div class="text-right">
+                <a class="btn btn-sm btn-outline-dark mb-1" href="${gmaps}" target="_blank" rel="noopener">Directions</a>
+                ${p.website?`<a class="btn btn-sm btn-outline-dark ml-1 mb-1" href="${p.website}" target="_blank" rel="noopener">Website</a>`:''}
+              </div>
+            </div>`;
+          li.addEventListener('click',()=>map.flyTo([p.lat,p.lon],16));
+          listEl.appendChild(li);
+
+          if (!reduceMotion) {
+            const delay = i * 60;
+            li.style.animation = `resultLift 420ms cubic-bezier(.2,.8,.2,1) both`;
+            li.style.animationDelay = `${delay}ms`;
+            const after = document.createElement('span');
+            after.style.position='absolute'; after.style.inset='0'; after.style.pointerEvents='none';
+            after.style.background='linear-gradient(90deg, rgba(224,33,33,0), rgba(224,33,33,.28), rgba(224,33,33,0))';
+            after.style.animation=`highlightSweep 650ms ease-out ${delay+80}ms both`;
+            li.appendChild(after);
+            setTimeout(()=>{ li.style.animation=''; li.style.animationDelay=''; after.remove(); }, delay+900);
+          }
+
+          li.querySelectorAll('.btn').forEach(magnetic);
+        });
+
+        if(bounds.length){
+          const b=L.latLngBounds(bounds);
+          if(userMarker) b.extend(userMarker.getLatLng());
+          map.fitBounds(b.pad(0.2));
+        }
+        statusEl.innerHTML=`Found ${points.length} place(s).`+'<br/><em>“'+pick(quotesFound)+'”</em>';
+        statusEl.classList.remove('ping'); void statusEl.offsetWidth; statusEl.classList.add('ping');
+        setTimeout(()=> statusEl.classList.remove('ping'), 800);
+      }
+
+      async function runSearchFrom(lat,lon){
+        try{
+          const r=parseInt(radiusSel.value,10)||3000;
+          drawRadius(lat, lon, r);
+
+          scanBar && scanBar.classList.add('active');
+          statusEl.classList.add('scanning');
+          statusEl.textContent = 'Searching nearby gyms...';
+          const elements=await fetchGyms(lat,lon,r);
+
+          const hasOH = elements.some(el => el.tags && el.tags.opening_hours);
+          openNowWrap.classList.toggle('d-none', !hasOH);
+
+          renderResults(elements,{lat,lng:lon}, openNowCb.checked);
+        }catch(e){
+          console.error(e);
+          statusEl.classList.remove('scanning');
+          statusEl.textContent='Could not load nearby gyms. Please try again.';
+        }finally{
+          statusEl.classList.remove('scanning');
+          scanBar && scanBar.classList.remove('active');
+        }
+      }
+
+      locateBtn && locateBtn.addEventListener('click',()=>{
+        if(!('geolocation'in navigator)){ statusEl.textContent='Geolocation is not supported by your browser.'; return; }
+        statusEl.textContent='Locating…';
+        navigator.geolocation.getCurrentPosition(
+          pos=>{ const {latitude,longitude}=pos.coords; setUserLocation(latitude,longitude); runSearchFrom(latitude,longitude); },
+          err=>{ console.warn(err); statusEl.textContent='Location access denied. You can search a place instead.'; },
+          { enableHighAccuracy:true, timeout:10000 }
+        );
+      });
+
+      // ====== FAST LOCATION SUGGESTIONS (Nominatim) ======
+      const cache = new Map(); // q -> results
+      let aborter = null;
+      let activeIndex = -1;
+
+      function debounce(fn, ms){
+        let t; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args), ms); };
+      }
+      function hideSuggest(){
+        suggestBox.classList.remove('show');
+        inputEl.setAttribute('aria-expanded','false');
+        suggestBox.innerHTML='';
+        activeIndex=-1;
+      }
+      function showSuggest(){
+        if(!suggestBox.innerHTML.trim()) return;
+        suggestBox.classList.add('show');
+        inputEl.setAttribute('aria-expanded','true');
+      }
+      function renderSuggestions(items){
+        if(!items.length){ hideSuggest(); return; }
+        const html = items.map((it,i)=>`
+          <div class="suggest-item" role="option" id="opt-${i}" data-lat="${it.lat}" data-lon="${it.lon}" data-label="${it.label.replace(/"/g,'&quot;')}" aria-selected="${i===activeIndex?'true':'false'}">
+            <div class="suggest-icon">📍</div>
+            <div>
+              <div class="suggest-title">${it.title}</div>
+              <div class="suggest-sub">${it.sub || ''}</div>
+            </div>
+          </div>
+        `).join('') + `<div class="suggest-footer">Powered by <a href="https://www.openstreetmap.org/" target="_blank" rel="noopener">OpenStreetMap</a></div>`;
+        suggestBox.innerHTML = html;
+        showSuggest();
+      }
+      function parseNominatim(r){
+        const title = r.display_name.split(',')[0];
+        const parts = [];
+        if(r.address){
+          const a = r.address;
+          if(a.city || a.town || a.village) parts.push(a.city || a.town || a.village);
+          if(a.state) parts.push(a.state);
+          if(a.country) parts.push(a.country);
+        }
+        return {
+          lat: parseFloat(r.lat),
+          lon: parseFloat(r.lon),
+          label: r.display_name,
+          title,
+          sub: parts.join(', ')
+        };
+      }
+      async function searchPlaces(q){
+        const key = q.toLowerCase().trim();
+        if(cache.has(key)) return cache.get(key);
+        if(aborter) aborter.abort();
+        aborter = new AbortController();
+        const url = `https://nominatim.openstreetmap.org/search?format=json&limit=8&addressdetails=1&q=${encodeURIComponent(q)}`;
+        const res = await fetch(url, { signal: aborter.signal, headers: { 'Accept':'application/json' }});
+        if(!res.ok) throw new Error('Suggest search failed');
+        const js = await res.json();
+        const arr = (js||[]).map(parseNominatim);
+        cache.set(key, arr);
+        return arr;
+      }
+      const doSuggest = debounce(async ()=>{
+        const q = (inputEl.value||'').trim();
+        if(q.length < 2){ hideSuggest(); return; }
+        try{
+          const results = await searchPlaces(q);
+          activeIndex = -1;
+          renderSuggestions(results);
+        }catch(e){
+          if(e.name!=='AbortError') console.warn(e);
+        }
+      }, 150);
+
+      inputEl && inputEl.addEventListener('input', doSuggest);
+
+      // Click selection
+      suggestBox && suggestBox.addEventListener('mousedown', (e)=>{
+        const item = e.target.closest('.suggest-item');
+        if(!item) return;
+        e.preventDefault(); // prevent input blur
+        selectSuggestion(item);
+      });
+
+      function selectSuggestion(node){
+        const lat = parseFloat(node.dataset.lat);
+        const lon = parseFloat(node.dataset.lon);
+        const label = node.dataset.label;
+        inputEl.value = label;
+        hideSuggest();
+        setUserLocation(lat, lon, 13);
+        runSearchFrom(lat, lon);
+      }
+
+      // Keyboard navigation
+      inputEl && inputEl.addEventListener('keydown', (e)=>{
+        if(!suggestBox.classList.contains('show')) return;
+        const items = Array.from(suggestBox.querySelectorAll('.suggest-item'));
+        if(!items.length) return;
+        if(e.key==='ArrowDown'){
+          e.preventDefault();
+          activeIndex = (activeIndex + 1) % items.length;
+          updateActive(items);
+        }else if(e.key==='ArrowUp'){
+          e.preventDefault();
+          activeIndex = (activeIndex - 1 + items.length) % items.length;
+          updateActive(items);
+        }else if(e.key==='Enter'){
+          if(activeIndex>=0){
+            e.preventDefault();
+            selectSuggestion(items[activeIndex]);
+          }
+        }else if(e.key==='Escape'){
+          hideSuggest();
+        }
+      });
+      function updateActive(items){
+        items.forEach((el,i)=> el.setAttribute('aria-selected', i===activeIndex ? 'true' : 'false'));
+        const act = items[activeIndex];
+        if(act){ act.scrollIntoView({block:'nearest'}); }
+      }
+      inputEl && inputEl.addEventListener('blur', ()=> setTimeout(hideSuggest, 120));
+
+      // Simple geocode for manual Search button
+      async function geocode(q){
+        const url=`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1`;
+        const res=await fetch(url,{ headers:{'Accept':'application/json'} });
+        if(!res.ok) throw new Error('Geocoding failed');
+        const js=await res.json(); return js[0]?{lat:parseFloat(js[0].lat), lon:parseFloat(js[0].lon)}:null;
+      }
+
+      searchBtn && searchBtn.addEventListener('click', async ()=>{
+        const q=(inputEl && inputEl.value || '').trim();
+        if(!q){ statusEl.textContent='Enter a place to search, or use your location.'; return; }
+        statusEl.textContent='Searching location…';
+        try{
+          scanBar && scanBar.classList.add('active');
+          const pt=await geocode(q);
+          if(!pt){ statusEl.textContent='Could not find that place.'; return; }
+          setUserLocation(pt.lat, pt.lon, 13);
+          await runSearchFrom(pt.lat, pt.lon);
+        }catch(e){ console.error(e); statusEl.textContent='Problem searching that place.'; }
+        finally{ scanBar && scanBar.classList.remove('active'); }
+      });
+
+      radiusSel && radiusSel.addEventListener('change',()=>{
+        if(userMarker){
+          const {lat,lng}=userMarker.getLatLng();
+          drawRadius(lat, lng, parseInt(radiusSel.value,10)||3000);
+          runSearchFrom(lat,lng);
+        }
+      });
+
+      openNowCb && openNowCb.addEventListener('change', ()=>{
+        if(userMarker){
+          const {lat,lng}=userMarker.getLatLng();
+          runSearchFrom(lat,lng);
+        }
+      });
+
+      // Quiet auto-locate on load
+      window.addEventListener('load',()=>{
+        if(location.protocol==='https:' && 'geolocation'in navigator){
+          navigator.geolocation.getCurrentPosition(
+            pos=>{ const {latitude,longitude}=pos.coords; setUserLocation(latitude,longitude); runSearchFrom(latitude,longitude); },
+            ()=>{}, { enableHighAccuracy:true, timeout:7000 }
+          );
+        }
+      });
+    }
+
+    /* ===== Scroll to top ===== */
+    const toTop = document.getElementById('to-top');
+    window.addEventListener('scroll', ()=>{
+      if(window.scrollY > 320){ toTop.classList.add('show'); } else { toTop.classList.remove('show'); }
+    });
+    toTop.addEventListener('click', ()=> window.scrollTo({top:0, behavior:'smooth'}));
+
+    // Footer year
+    const yEl=document.getElementById('year'); if(yEl) yEl.textContent=new Date().getFullYear();
+  })();
+  </script>
+
+  <!-- Carousel & AOS init -->
+  <script>
+    (function(){
+      if (window.jQuery) {
+        $('#aboutCarousel').carousel({ interval: 4200, ride: 'carousel', pause: false, wrap: true });
+      }
+      if (window.AOS) { AOS.init({ once:true, duration:700, easing:'ease-out-cubic' }); }
+    })();
+  </script>
+
+  <!-- Typewriter: Telugu → (backspace) → Hindi → (backspace) → English → (backspace) -->
+  <script>
+    (function(){
+      const el = document.getElementById('type-cycle');
+
+      const steps = [
+        { text: "ఇక మొదలెడదామా!",      backspace: true,  lang: "telugu"  },
+        { text: "चलो, शुरू करते हैं!",  backspace: true,  lang: "hindi"   },
+        { text: "Let's goooo!!!!!",     backspace: true,  lang: "english" }
+      ];
+
+      const TYPE_MS=60, BACK_MS=35, HOLD_TYPE=900, HOLD_BACK=350;
+
+      const langFont = {
+        telugu: `"Noto Sans Telugu","Inter",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif`,
+        hindi:  `"Noto Sans Devanagari","Inter",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif`,
+        english:`"Inter",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif`
+      };
+
+      function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+      async function type(t){ for(let i=0;i<t.length;i++){ el.textContent+=t[i]; await sleep(TYPE_MS);} }
+      async function back(n){ for(let i=0;i<n;i++){ el.textContent=el.textContent.slice(0,-1); await sleep(BACK_MS);} }
+
+      async function loop(){
+        if(!el) return;
+        let i=0;
+        while(true){
+          const {text,backspace,lang}=steps[i];
+          el.style.fontFamily = langFont[lang] || langFont.english;
+          await type(text);
+          await sleep(HOLD_TYPE);
+          if(backspace){ await back(text.length); await sleep(HOLD_BACK); }
+          i=(i+1)%steps.length;
+        }
+      }
+      el && el.setAttribute('aria-live','polite');
+      loop();
+    })();
+  </script>
+
+  <!-- ABOUT meters: animate every time the section enters view -->
+  <script>
+    (function(){
+      const meters = [
+        { bar: document.getElementById('bar-success'),      pct: document.getElementById('pct-success'),      to: 100, duration: 1800 },
+        { bar: document.getElementById('bar-adherence'),    pct: document.getElementById('pct-adherence'),    to: 100, duration: 2000 },
+        { bar: document.getElementById('bar-satisfaction'), pct: document.getElementById('pct-satisfaction'), to: 100, duration: 2200 },
+      ];
+
+      const prefRed = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      function easeOutCubic(t){ return 1 - Math.pow(1 - t, 3); }
+
+      function resetMeter(m){
+        if(!m || !m.bar || !m.pct) return;
+        if(m._raf) cancelAnimationFrame(m._raf);
+        m._animating = false; m._raf = null;
+        m.bar.style.width = '0%';
+        m.pct.textContent = '0%';
+      }
+
+      function animateMeter(m){
+        if(!m || !m.bar || !m.pct) return;
+        if(m._animating) return;
+        m._animating = true;
+
+        if(prefRed){
+          m.bar.style.width = m.to + '%';
+          m.pct.textContent = m.to + '%';
+          m._animating = false;
+          return;
+        }
+
+        const start = performance.now();
+        const dur   = m.duration || 2000;
+
+        function step(now){
+          if(!m._animating) return; // cancelled
+          const t = Math.min(1, (now - start) / dur);
+          const v = Math.round(easeOutCubic(t) * m.to);
+          m.bar.style.width = v + '%';
+          m.pct.textContent = v + '%';
+          if(t < 1){
+            m._raf = requestAnimationFrame(step);
+          }else{
+            m._animating = false;
+            m._raf = null;
+          }
+        }
+        m._raf = requestAnimationFrame(step);
+      }
+
+      const aboutSection = document.getElementById('about');
+      if('IntersectionObserver' in window && aboutSection){
+        const io = new IntersectionObserver((entries)=>{
+          entries.forEach(e=>{
+            if(e.isIntersecting){
+              meters.forEach(m => { resetMeter(m); animateMeter(m); });
+            }else{
+              meters.forEach(resetMeter);
+            }
+          });
+        }, { threshold: 0.35 });
+        io.observe(aboutSection);
+      }else{
+        // Fallback: animate on load, then reset/animate as you scroll
+        meters.forEach(m => { resetMeter(m); animateMeter(m); });
+        window.addEventListener('scroll', ()=>{
+          const r = aboutSection.getBoundingClientRect();
+          const inView = r.top < innerHeight * 0.65 && r.bottom > innerHeight * 0.35;
+          if(inView){
+            if(!meters.some(m => m._animating || (m.bar && m.bar.style.width === (m.to + '%')))){
+              meters.forEach(m => { resetMeter(m); animateMeter(m); });
+            }
+          }else{
+            meters.forEach(resetMeter);
+          }
+        }, { passive:true });
+      }
+    })();
+  </script>
+
+  <!-- Analytics (consent + DNT aware) -->
+  <script>
+    (function(){
+      // ===== CONFIG =====
+      const ENABLE_ANALYTICS = true;
+      const ANALYTICS_PROVIDER = 'plausible';      // 'plausible' | 'ga4' | 'none'
+      const PLAUSIBLE_DOMAIN = 'example.com';      // <- change to your domain
+      const GA_MEASUREMENT_ID = 'G-XXXXXXXXXX';    // <- change if using GA4
+      // ==================
+
+      const DNT = (navigator.doNotTrack=='1' || window.doNotTrack=='1' || navigator.msDoNotTrack=='1');
+      const banner = document.getElementById('cookie-banner');
+      const acceptBtn = document.getElementById('cookie-accept');
+      const rejectBtn = document.getElementById('cookie-reject');
+
+      function loadAnalytics(){
+        if(!ENABLE_ANALYTICS || DNT) return;
+        if(ANALYTICS_PROVIDER==='plausible'){
+          var s=document.createElement('script');
+          s.defer = true;
+          s.setAttribute('data-domain', PLAUSIBLE_DOMAIN);
+          s.src='https://plausible.io/js/plausible.js';
+          document.head.appendChild(s);
+        }else if(ANALYTICS_PROVIDER==='ga4'){
+          var s=document.createElement('script');
+          s.async=true;
+          s.src='https://www.googletagmanager.com/gtag/js?id='+GA_MEASUREMENT_ID;
+          document.head.appendChild(s);
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){ dataLayer.push(arguments); }
+          window.gtag = gtag;
+          gtag('js', new Date());
+          gtag('config', GA_MEASUREMENT_ID, { 'anonymize_ip': true, 'allow_google_signals': false });
+        }
+      }
+
+      function getConsent(){ try{ return localStorage.getItem('consent.analytics'); }catch(e){ return null; } }
+      function setConsent(val){ try{ localStorage.setItem('consent.analytics', val);}catch(e){} }
+
+      const prior = getConsent();
+      if(ENABLE_ANALYTICS && !DNT){
+        if(prior==='granted'){ loadAnalytics(); }
+        else if(prior==='denied'){ /* noop */ }
+        else{ banner && banner.classList.add('show'); }
+      }else{
+        banner && banner.classList.remove('show');
+      }
+
+      acceptBtn && acceptBtn.addEventListener('click', ()=>{
+        setConsent('granted');
+        banner.classList.remove('show');
+        loadAnalytics();
+      });
+      rejectBtn && rejectBtn.addEventListener('click', ()=>{
+        setConsent('denied');
+        banner.classList.remove('show');
+      });
+    })();
+  </script>
+
+</body>
+</html>

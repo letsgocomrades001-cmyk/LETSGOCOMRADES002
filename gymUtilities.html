@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Gym Utilities</title>
+
+  <!-- ====== GYMSO-STYLE THEME (same palette, modern UI) ====== -->
+  <style>
+    :root{
+      /* Gymso palette */
+      --bg:#171819;
+      --panel:rgba(255,255,255,.035);
+      --panel-solid:#1b1c1e;
+      --border:rgba(255,255,255,.08);
+      --ink:#ffffff;
+      --muted:#c9c9c9;
+      --primary:#e02121;           /* Gymso red */
+      --primary-ink:#ffffff;
+      --ring:rgba(224,33,33,.45);
+      --radius:16px;
+      --radius-sm:12px;
+      --elev-1: 0 14px 40px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.02);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; background:var(--bg); color:var(--ink);
+      font-family: "Open Sans", Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial;
+      -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+      background-image:
+        radial-gradient(1000px 600px at 120% -10%, rgba(224,33,33,.08), transparent 60%),
+        radial-gradient(800px 500px at -10% 10%, rgba(255,255,255,.04), transparent 60%);
+      background-attachment: fixed;
+    }
+
+    .container{ max-width:1180px; margin:28px auto; padding:0 18px; }
+    .card{
+      backdrop-filter: blur(10px) saturate(115%);
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--elev-1);
+      overflow:hidden;
+      position:relative;
+    }
+    /* Red accent top bar */
+    .card::before{
+      content:""; position:absolute; inset:0 0 auto 0; height:3px;
+      background:linear-gradient(90deg, rgba(224,33,33,1), rgba(224,33,33,.6));
+      filter: drop-shadow(0 0 10px rgba(224,33,33,.55));
+    }
+    .card-header{
+      padding:22px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+    }
+    .title{
+      margin:0; display:flex; align-items:center; gap:10px;
+      font-size: clamp(22px, 3vw, 30px); font-weight:800; letter-spacing:.2px;
+    }
+    .title .dot{
+      width:12px; height:12px; border-radius:50%;
+      background:radial-gradient(circle at 35% 35%, #fff, #e87a7a 55%, transparent 65%);
+      box-shadow:0 0 18px rgba(224,33,33,.65), inset 0 0 6px rgba(255,255,255,.35);
+    }
+
+    .toolbar{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .upload{
+      display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+      background:rgba(255,255,255,.03);
+      border:1px dashed var(--border); border-radius:12px; padding:10px 12px;
+    }
+    .upload input[type="file"]{ color:var(--ink); border:none; background:transparent; padding:6px 0; cursor:pointer; }
+    .card-body{ padding:18px; }
+
+    /* Utilities pill bar (top, no dropdown) */
+    .util-bar{
+      display:flex; gap:10px; overflow:auto; scrollbar-width:thin;
+      padding:12px; border-top:1px solid var(--border); border-bottom:1px solid var(--border);
+      background:rgba(255,255,255,.02);
+    }
+    .util-btn{
+      flex:0 0 auto; white-space:nowrap;
+      border:1px solid var(--border); color:#f0f0f0; background:rgba(255,255,255,.02);
+      border-radius:999px; padding:10px 14px; font-weight:700; font-size:14px;
+      transition:.2s; cursor:pointer;
+    }
+    .util-btn:hover{ border-color:rgba(224,33,33,.6); color:#fff; box-shadow:0 8px 24px rgba(224,33,33,.18) }
+    .util-btn.active{
+      color:var(--primary-ink); border-color:transparent;
+      background: linear-gradient(135deg, #e02121 0%, #a21515 100%);
+      box-shadow:0 10px 30px rgba(224,33,33,.35);
+    }
+
+    /* Inputs & buttons */
+    .field label{ display:block; font-weight:800; margin:6px 0 6px; color:#fff }
+    .hint{ font-size:12px; color:var(--muted) }
+    .input, .select, .range, .textarea{
+      width:100%; padding:12px 12px; border-radius:12px; font-size:16px;
+      color:#fff; background:rgba(255,255,255,.04); border:1px solid var(--border);
+      outline:none; transition:.15s; box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
+    }
+    .input:focus, .select:focus, .range:focus, .textarea:focus{ border-color:var(--primary); box-shadow:0 0 0 3px var(--ring) }
+
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center; gap:8px;
+      border:1px solid #000; background:#111214; color:#fff;
+      border-radius:12px; padding:12px 16px; font-weight:800; cursor:pointer; transition:.2s;
+      box-shadow:0 6px 16px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.05);
+    }
+    .btn:hover{
+      background:linear-gradient(135deg, #e02121, #b01a1a);
+      border-color:#e02121; transform:translateY(-1px);
+      box-shadow:0 12px 28px rgba(224,33,33,.35);
+    }
+    .btn:active{ transform:none }
+    .btn-outline{
+      background:rgba(255,255,255,.04); border:1px solid var(--border); color:#f0f0f0;
+    }
+    .btn-outline:hover{ color:#fff }
+
+    .actions-row{ display:flex; gap:10px; flex-wrap:wrap }
+
+    /* Layout */
+    .grid{ display:grid; gap:14px }
+    .two{ grid-template-columns:1fr 1fr }
+    .three{ grid-template-columns:repeat(3,1fr) }
+    @media (max-width:880px){ .two{grid-template-columns:1fr} .three{grid-template-columns:1fr} }
+
+    /* Sections */
+    .section-panel{ display:none; animation:fade .2s ease-out }
+    .section-panel.active{ display:block }
+    @keyframes fade{ from{opacity:.6; transform:translateY(4px)} to{opacity:1; transform:none} }
+
+    .notice{
+      border-radius:12px; padding:12px 14px; font-weight:700;
+      border:1px solid var(--border); background:rgba(255,255,255,.03);
+      color:#fff; box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
+    }
+    .notice.ok{ border-color:rgba(34,197,94,.35); background:linear-gradient(180deg, rgba(34,197,94,.1), rgba(34,197,94,.03)); color:#dbffe8 }
+    .notice.err{ border-color:rgba(239,68,68,.35); background:linear-gradient(180deg, rgba(239,68,68,.1), rgba(239,68,68,.03)); color:#ffe7e7 }
+
+    .table{
+      width:100%; border-collapse:collapse; overflow:hidden; border-radius:12px;
+      border:1px solid var(--border); background:rgba(255,255,255,.02);
+    }
+    .table th,.table td{ padding:10px 12px; border-bottom:1px solid var(--border); text-align:left; font-size:14px; color:#f3f3f3 }
+    .table thead th{ background:rgba(255,255,255,.05); font-weight:900; color:#fff }
+
+    details{
+      border:1px solid var(--border); border-radius:12px; padding:12px 14px;
+      background:rgba(255,255,255,.03); color:#fff;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
+    }
+    details+details{ margin-top:12px }
+    summary{ cursor:pointer; font-weight:900 }
+
+    .pill{
+      display:inline-block; padding:6px 10px; border:1px solid var(--border); border-radius:999px; background:rgba(255,255,255,.04); color:#fff; font-size:13px; font-weight:800;
+    }
+    .muted{ color:var(--muted) }
+    .small{ font-size:13px }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="card">
+      <div class="card-header">
+        <h1 class="title"><span class="dot"></span> Gym Utilities</h1>
+        <div class="toolbar">
+          <div class="upload">
+            <strong class="small">Restore from PDF</strong>
+            <input type="file" id="pdfUpload" accept="application/pdf"/>
+            <span class="small muted">Upload a PDF exported from this page</span>
+          </div>
+          <button id="downloadPdfBtn" class="btn" title="Export your data to PDF">Download PDF</button>
+        </div>
+      </div>
+
+      <!-- TOP UTILITIES (no dropdown; Gymso red accent) -->
+      <div class="util-bar" id="utilBar">
+        <button class="util-btn active" data-target="macros">🔥 Macros & TDEE</button>
+        <button class="util-btn" data-target="beginner">🧭 Beginner Plan</button>
+        <button class="util-btn" data-target="bodyfat">📏 Body Fat & Measures</button>
+        <button class="util-btn" data-target="progression">📈 Progression Planner</button>
+        <button class="util-btn" data-target="nutrition">🥗 Nutrition Helpers</button>
+        <button class="util-btn" data-target="recovery">😴 Recovery Tools</button>
+        <button class="util-btn" data-target="fun">🎲 Fun & Engagement</button>
+      </div>
+
+      <div class="card-body">
+        <!-- ============ MACROS / TDEE ============ -->
+        <section id="macros" class="section-panel active" aria-labelledby="tab-macros">
+          <h2 style="margin:6px 0 12px">BMR / TDEE & Macros</h2>
+          <p class="muted small">Mifflin–St Jeor · choose units, fill details, set a goal → calories & macros.</p>
+
+          <div class="grid two" style="margin-top:10px">
+            <div>
+              <div class="actions-row">
+                <button id="unitMetric" class="btn">Metric</button>
+                <button id="unitImperial" class="btn btn-outline">Imperial</button>
+              </div>
+
+              <!-- Metric -->
+              <div id="metricBox" style="margin-top:12px">
+                <div class="grid two">
+                  <div class="field"><label>Weight (kg)</label><input id="mWeight" class="input" type="number" min="20" max="400" step="0.1" placeholder="70"></div>
+                  <div class="field"><label>Height (cm)</label><input id="mHeight" class="input" type="number" min="100" max="250" step="0.1" placeholder="175"></div>
+                </div>
+              </div>
+              <!-- Imperial -->
+              <div id="imperialBox" style="display:none; margin-top:12px">
+                <div class="grid three">
+                  <div class="field"><label>Weight (lb)</label><input id="iWeight" class="input" type="number" min="50" max="900" step="0.1" placeholder="154"></div>
+                  <div class="field"><label>Height (ft)</label><input id="iFt" class="input" type="number" min="3" max="8" step="1" placeholder="5"></div>
+                  <div class="field"><label>Height (in)</label><input id="iIn" class="input" type="number" min="0" max="11" step="1" placeholder="9"></div>
+                </div>
+              </div>
+
+              <div class="grid three" style="margin-top:12px">
+                <div class="field">
+                  <label>Age</label>
+                  <input id="age" class="input" type="number" min="12" max="100" placeholder="25">
+                </div>
+                <div class="field">
+                  <label>Sex</label>
+                  <select id="sex" class="select">
+                    <option value="male">Male</option><option value="female">Female</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Activity</label>
+                  <select id="activity" class="select">
+                    <option value="1.2">Sedentary</option>
+                    <option value="1.375">Light</option>
+                    <option value="1.55" selected>Moderate</option>
+                    <option value="1.725">Very Active</option>
+                    <option value="1.9">Extra Active</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="grid two" style="margin-top:10px">
+                <div class="field">
+                  <label>Goal</label>
+                  <select id="goal" class="select">
+                    <option value="cut">Lose Fat (−20%)</option>
+                    <option value="recomp" selected>Maintain / Recomp (±0%)</option>
+                    <option value="bulk">Gain Muscle (+10%)</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Protein (g/kg)</label>
+                  <input id="proteinPerKg" class="input" type="number" step="0.1" value="1.8">
+                  <div class="hint">Cut 2.0 · Recomp 1.8 · Bulk 1.6 (edit if you like)</div>
+                </div>
+              </div>
+
+              <div class="actions-row" style="margin-top:10px">
+                <button id="calcBtn" class="btn">Calculate</button>
+                <button id="addMacrosToSummary" class="btn btn-outline">Add to Summary</button>
+              </div>
+            </div>
+
+            <div>
+              <div id="macroResult" class="notice ok" style="display:none"></div>
+              <details style="margin-top:12px">
+                <summary>How this works</summary>
+                <p class="small" style="margin-top:8px">
+                  BMR = 10·kg + 6.25·cm − 5·age + S (S=+5 male, −161 female).<br>
+                  TDEE = BMR × activity. Goal adjusts calories by −20% (cut) or +10% (bulk).<br>
+                  Protein = (protein per kg · bodyweight). Fat ~30% calories (25% on a cut). Carbs = remaining.
+                </p>
+              </details>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ BEGINNER PLAN ============ -->
+        <section id="beginner" class="section-panel" aria-labelledby="tab-beginner">
+          <h2 style="margin:6px 0 12px">Beginner Plan Picker</h2>
+          <div class="grid two">
+            <div>
+              <div class="field">
+                <label>Your Goal</label>
+                <select id="qGoal" class="select">
+                  <option value="fatloss">Lose fat / get leaner</option>
+                  <option value="muscle" selected>Build muscle / strength</option>
+                  <option value="fitness">General fitness / habit</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Days per week <span id="daysVal" class="pill">4</span></label>
+                <input id="qDays" class="range" type="range" min="2" max="6" step="1" value="4">
+              </div>
+              <div class="field">
+                <label>Equipment</label>
+                <select id="qEquip" class="select">
+                  <option value="none">No equipment</option>
+                  <option value="dumbbells">Dumbbells only</option>
+                  <option value="gym" selected>Full gym access</option>
+                </select>
+              </div>
+              <div class="actions-row">
+                <button id="planBtn" class="btn">Show my plan</button>
+                <button id="addPlanToSummary" class="btn btn-outline">Add to Summary</button>
+              </div>
+            </div>
+            <div><div id="planResult" class="notice ok" style="display:none"></div></div>
+          </div>
+        </section>
+
+        <!-- ============ BODY FAT & MEASUREMENTS ============ -->
+        <section id="bodyfat" class="section-panel" aria-labelledby="tab-bodyfat">
+          <h2 style="margin:6px 0 12px">Body Fat & Measurements</h2>
+          <p class="small muted">Quick body-fat estimate (U.S. Navy). Track changes in a log.</p>
+
+          <div class="grid two">
+            <div>
+              <div class="grid three">
+                <div class="field">
+                  <label>Sex</label>
+                  <select id="bfSex" class="select"><option>male</option><option>female</option></select>
+                </div>
+                <div class="field"><label>Height (cm)</label><input id="bfHeight" class="input" type="number" step="0.1" placeholder="175"></div>
+                <div class="field"><label>Neck (cm)</label><input id="bfNeck" class="input" type="number" step="0.1" placeholder="38"></div>
+              </div>
+
+              <div class="grid three">
+                <div class="field"><label>Waist (cm)</label><input id="bfWaist" class="input" type="number" step="0.1" placeholder="80"></div>
+                <div class="field" id="bfHipWrap" style="display:none"><label>Hip (cm)</label><input id="bfHip" class="input" type="number" step="0.1" placeholder="95"></div>
+                <div class="field"><label>Weight (kg)</label><input id="bfWeight" class="input" type="number" step="0.1" placeholder="70"></div>
+              </div>
+
+              <div class="actions-row">
+                <button id="bfCalc" class="btn">Estimate Body Fat</button>
+                <button id="addMeasurement" class="btn btn-outline">Add to Log</button>
+              </div>
+              <div id="bfResult" class="notice ok" style="display:none; margin-top:10px"></div>
+            </div>
+
+            <div>
+              <h3 style="margin:4px 0 8px">Measurements Log</h3>
+              <div class="small muted" style="margin-bottom:6px">Log weekly at the same time of day.</div>
+              <div style="overflow:auto; max-height:280px; border:1px solid var(--border); border-radius:12px;">
+                <table class="table" id="measureTable">
+                  <thead><tr><th>Date</th><th>Weight</th><th>BFP%</th><th>Waist</th><th>Neck</th><th>Hip</th><th></th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+              <div class="actions-row" style="margin-top:8px">
+                <button id="addLogToSummary" class="btn btn-outline">Add Log to Summary</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ PROGRESSION PLANNER ============ -->
+        <section id="progression" class="section-panel" aria-labelledby="tab-progression">
+          <h2 style="margin:6px 0 12px">Progression Planner</h2>
+          <p class="small muted">Linear progression table for a lift.</p>
+
+          <div class="grid two">
+            <div>
+              <div class="grid three">
+                <div class="field"><label>Exercise</label><input id="prExercise" class="input" placeholder="Bench Press"></div>
+                <div class="field"><label>Start Weight</label><input id="prStart" class="input" type="number" step="0.5" placeholder="40"></div>
+                <div class="field"><label>Increment</label><input id="prInc" class="input" type="number" step="0.5" placeholder="2.5"></div>
+              </div>
+              <div class="grid three">
+                <div class="field"><label>Sets × Reps</label><input id="prScheme" class="input" placeholder="3×5"></div>
+                <div class="field"><label>Sessions / Week</label><input id="prFreq" class="input" type="number" min="1" max="6" value="3"></div>
+                <div class="field"><label>Weeks</label><input id="prWeeks" class="input" type="number" min="1" max="12" value="8"></div>
+              </div>
+              <div class="actions-row">
+                <button id="prBuild" class="btn">Build Plan</button>
+                <button id="addProgToSummary" class="btn btn-outline">Add to Summary</button>
+              </div>
+            </div>
+            <div>
+              <div style="overflow:auto; max-height:280px; border:1px solid var(--border); border-radius:12px;">
+                <table class="table" id="progTable">
+                  <thead><tr><th>#</th><th>Week</th><th>Session</th><th>Weight</th><th>Scheme</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ NUTRITION HELPERS ============ -->
+        <section id="nutrition" class="section-panel" aria-labelledby="tab-nutrition">
+          <h2 style="margin:6px 0 12px">Nutrition Helpers</h2>
+
+          <details open>
+            <summary>Meal Macro Splitter</summary>
+            <div class="grid three" style="margin-top:8px">
+              <div class="field"><label>Daily Protein (g)</label><input id="nhP" class="input" type="number" placeholder="150"></div>
+              <div class="field"><label>Daily Carbs (g)</label><input id="nhC" class="input" type="number" placeholder="250"></div>
+              <div class="field"><label>Daily Fat (g)</label><input id="nhF" class="input" type="number" placeholder="70"></div>
+            </div>
+            <div class="grid two">
+              <div class="field"><label>Meals / day</label><input id="nhMeals" class="input" type="number" min="2" max="8" value="4"></div>
+              <div class="field"><label>Heaviest meal index (1..N)</label><input id="nhHeavy" class="input" type="number" min="1" value="2"></div>
+            </div>
+            <div class="actions-row">
+              <button id="nhBuild" class="btn">Build Meal Plan</button>
+              <button id="addNutriToSummary" class="btn btn-outline">Add to Summary</button>
+            </div>
+            <div style="overflow:auto; max-height:260px; border:1px solid var(--border); border-radius:12px; margin-top:8px">
+              <table class="table" id="nhTable">
+                <thead><tr><th>Meal</th><th>Protein</th><th>Carbs</th><th>Fat</th><th>Calories</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </details>
+
+          <details style="margin-top:12px">
+            <summary>Hydration Estimator</summary>
+            <div class="grid three" style="margin-top:8px">
+              <div class="field"><label>Bodyweight (kg)</label><input id="hyKg" class="input" type="number" step="0.1" placeholder="70"></div>
+              <div class="field"><label>Workout length (min)</label><input id="hyMin" class="input" type="number" placeholder="60"></div>
+              <div class="field"><label>Climate</label>
+                <select id="hyClimate" class="select"><option value="normal">Normal</option><option value="hot">Hot</option></select>
+              </div>
+            </div>
+            <div class="actions-row"><button id="hyCalc" class="btn">Estimate Water</button></div>
+            <div id="hyResult" class="notice ok" style="display:none; margin-top:8px"></div>
+          </details>
+        </section>
+
+        <!-- ============ RECOVERY ============ -->
+        <section id="recovery" class="section-panel" aria-labelledby="tab-recovery">
+          <h2 style="margin:6px 0 12px">Recovery Tools</h2>
+          <div class="grid two">
+            <div>
+              <h3 style="margin:6px 0">Sleep Calculator</h3>
+              <div class="grid two">
+                <div class="field"><label>Wake time</label><input id="slWake" class="input" type="time" value="07:00"></div>
+                <div class="field"><label>Cycles (90 min)</label><input id="slCycles" class="input" type="number" min="3" max="7" value="5"></div>
+              </div>
+              <div class="actions-row"><button id="slCalc" class="btn">Suggest Bedtime</button></div>
+              <div id="slResult" class="notice ok" style="display:none; margin-top:8px"></div>
+            </div>
+            <div>
+              <h3 style="margin:6px 0">RPE → % Estimate</h3>
+              <div class="grid three">
+                <div class="field"><label>RPE</label><input id="rpe" class="input" type="number" min="6" max="10" step="0.5" value="8.5"></div>
+                <div class="field"><label>Reps in set</label><input id="rpeReps" class="input" type="number" min="1" max="15" value="5"></div>
+                <div class="field"><label>1RM (opt)</label><input id="rpeOneRm" class="input" type="number" step="0.5" placeholder="100"></div>
+              </div>
+              <div class="actions-row"><button id="rpeCalc" class="btn">Estimate % & Load</button></div>
+              <div id="rpeResult" class="notice ok" style="display:none; margin-top:8px"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ FUN & ENGAGEMENT ============ -->
+        <section id="fun" class="section-panel" aria-labelledby="tab-fun">
+          <h2 style="margin:6px 0 12px">Fun & Engagement</h2>
+          <div class="grid two">
+            <div>
+              <h3 style="margin:6px 0">Streak Tracker</h3>
+              <div class="grid two">
+                <div class="field"><label>Started on</label><input id="stDate" class="input" type="date"></div>
+                <div class="field"><label>Target (days/week)</label><input id="stTarget" class="input" type="number" min="1" max="7" value="4"></div>
+              </div>
+              <div class="actions-row"><button id="stCalc" class="btn">Calculate Streak</button></div>
+              <div id="stResult" class="notice ok" style="display:none; margin-top:8px"></div>
+            </div>
+            <div>
+              <h3 style="margin:6px 0">Daily Challenge</h3>
+              <p class="small muted">Tap to spin a new quick challenge.</p>
+              <div class="actions-row"><button id="chSpin" class="btn">Spin Challenge</button></div>
+              <div id="chResult" class="notice ok" style="display:none; margin-top:8px"></div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== PDF LIBS ====== -->
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+  <script>pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";</script>
+
+  <!-- ====== APP LOGIC ====== -->
+  <script>
+    // ---------- State for export/restore ----------
+    const AppState = {
+      macros:null,
+      plan:null,
+      measurements:[],
+      progression:null,
+      meals:null,
+      hydration:null,
+      sleep:null,
+      rpe:null,
+      streak:null,
+      challenge:null,
+    };
+
+    // ---------- Top pill navigation ----------
+    const bar = document.getElementById('utilBar');
+    const panels = document.querySelectorAll('.section-panel');
+    bar.addEventListener('click', e=>{
+      const b=e.target.closest('.util-btn'); if(!b) return;
+      bar.querySelectorAll('.util-btn').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      const id=b.dataset.target; panels.forEach(p=>p.classList.toggle('active', p.id===id));
+      b.scrollIntoView({inline:'nearest', behavior:'smooth', block:'nearest'});
+    });
+
+    // ---------- Macros / TDEE ----------
+    const unitMetric = document.getElementById('unitMetric');
+    const unitImperial = document.getElementById('unitImperial');
+    const metricBox = document.getElementById('metricBox');
+    const imperialBox = document.getElementById('imperialBox');
+    let usingMetric = true;
+    unitMetric.onclick = ()=>{ usingMetric=true; unitMetric.classList.remove('btn-outline'); unitImperial.classList.add('btn-outline'); metricBox.style.display='block'; imperialBox.style.display='none'; };
+    unitImperial.onclick = ()=>{ usingMetric=false; unitImperial.classList.remove('btn-outline'); unitMetric.classList.add('btn-outline'); metricBox.style.display='none'; imperialBox.style.display='block'; };
+
+    function num(v){ const n=parseFloat(v); return isNaN(n)?null:n; }
+
+    document.getElementById('calcBtn').onclick = ()=>{
+      let kg, cm;
+      if(usingMetric){
+        kg = num(document.getElementById('mWeight').value);
+        cm = num(document.getElementById('mHeight').value);
+      }else{
+        const lb = num(document.getElementById('iWeight').value);
+        const ft = num(document.getElementById('iFt').value)||0;
+        const inch = num(document.getElementById('iIn').value)||0;
+        if(lb!=null) kg = lb * 0.45359237;
+        const totalIn = ft*12 + inch;
+        if(totalIn>0) cm = totalIn*2.54;
+      }
+      const age = num(document.getElementById('age').value);
+      const sex = document.getElementById('sex').value;
+      const activity = parseFloat(document.getElementById('activity').value||'1.55');
+      const goal = document.getElementById('goal').value;
+      const ppk = num(document.getElementById('proteinPerKg').value)||1.8;
+
+      const out = document.getElementById('macroResult');
+      if(kg==null||cm==null||age==null){ out.style.display='block'; out.className='notice err'; out.textContent='Please fill weight, height, and age.'; return; }
+
+      // BMR (Mifflin–St Jeor)
+      let BMR=10*kg + 6.25*cm - 5*age + (sex==='male'?5:-161);
+      let TDEE=BMR*activity;
+
+      let adjPct = goal==='cut' ? -20 : goal==='bulk' ? +10 : 0;
+      const calories = Math.round(TDEE*(1+adjPct/100));
+
+      const proteinG = Math.round(ppk*kg);
+      const fatPct = goal==='cut'?0.25:0.30;
+      const fatCals = Math.round(calories*fatPct);
+      const fatG = Math.round(fatCals/9);
+      const protCals = proteinG*4;
+      const carbsG = Math.max(Math.round((calories-protCals-fatCals)/4),0);
+
+      out.style.display='block'; out.className='notice ok';
+      out.innerHTML = `
+        <div style="display:flex;justify-content:space-between;"><strong>Calories</strong><span>${calories.toLocaleString()} kcal/day</span></div>
+        <hr style="border:0;border-top:1px solid ${getComputedStyle(document.body).getPropertyValue('--border')};margin:8px 0">
+        <div class="grid three">
+          <div><strong>Protein</strong><br>${proteinG} g</div>
+          <div><strong>Carbs</strong><br>${carbsG} g</div>
+          <div><strong>Fat</strong><br>${fatG} g</div>
+        </div>
+        <p class="small muted" style="margin:6px 0 0">Tip: keep protein steady; tweak carbs/fats ±10–15% as you track.</p>
+      `;
+
+      AppState.macros = { calories, proteinG, carbsG, fatG, kg, cm, age, sex, activity, goal, ppk };
+    };
+
+    document.getElementById('addMacrosToSummary').onclick = ()=> toast('Macros added to PDF summary payload.');
+
+    // ---------- Beginner Plan ----------
+    const qDays = document.getElementById('qDays'), daysVal=document.getElementById('daysVal');
+    qDays.oninput = ()=> daysVal.textContent=qDays.value;
+
+    function buildPlan(){
+      const goal = document.getElementById('qGoal').value;
+      const days = parseInt(qDays.value, 10);
+      const equip = document.getElementById('qEquip').value;
+
+      let split='', schedule=[], note='';
+      if(equip==='none'){
+        if(days<=3){ split='Full Body (Bodyweight) · 3×/wk'; schedule=['Mon: Full Body','Wed: Full Body','Fri: Full Body']; }
+        else { split='Upper/Lower (Bodyweight) · 4×/wk'; schedule=['Mon: Upper','Tue: Lower','Thu: Upper','Fri: Lower']; }
+        note='Push-ups, rows, squats, hinges, planks. Progress reps/tempo weekly.';
+      } else if(equip==='dumbbells'){
+        if(days<=3){ split='Full Body (DB) · 3×/wk'; schedule=['Mon: Full Body (DB)','Wed: Full Body (DB)','Fri: Full Body (DB)']; }
+        else if(days===4){ split='Upper/Lower (DB) · 4×/wk'; schedule=['Mon: Upper','Tue: Lower','Thu: Upper','Fri: Lower']; }
+        else { split='PPL (DB) · 5×/wk'; schedule=['Mon: Push','Tue: Pull','Wed: Legs','Fri: Push','Sat: Pull']; }
+        note='DB presses/rows/squats/RDLs/lunges/carries.';
+      } else {
+        if(days<=3){ split='Full Body (Gym) · 3×/wk'; schedule=['Mon: Full Body','Wed: Full Body','Fri: Full Body']; }
+        else if(days===4){ split='Upper/Lower · 4×/wk'; schedule=['Mon: Upper','Tue: Lower','Thu: Upper','Fri: Lower']; }
+        else { split='PPL · 5–6×/wk'; schedule=['Mon: Push','Tue: Pull','Wed: Legs','Fri: Push','Sat: Pull','(Sun: Legs – optional)']; }
+        note='Big lifts first (squat/hinge/press/pull), then accessories & core.';
+      }
+      const goalNote = (goal==='fatloss')? 'Add steps + small deficit; keep intensity.' :
+                        (goal==='muscle')? 'Progressive overload; eat at maintenance / small surplus.' :
+                        'Consistency first: form, routine, and sleep.';
+
+      const html = `<strong>Recommended split:</strong> ${split}
+        <ul style="margin:8px 0 6px">${schedule.map(s=>`<li>${s}</li>`).join('')}</ul>
+        <div class="small muted">${goalNote} ${note}</div>`;
+      const out = document.getElementById('planResult'); out.style.display='block'; out.className='notice ok'; out.innerHTML=html;
+      AppState.plan = { split, schedule, note, goal };
+    }
+    document.getElementById('planBtn').onclick = buildPlan;
+    document.getElementById('addPlanToSummary').onclick = ()=> toast('Plan added to PDF summary payload.');
+
+    // ---------- Body Fat & Measurements ----------
+    const bfSex = document.getElementById('bfSex'), bfHeight=document.getElementById('bfHeight'), bfNeck=document.getElementById('bfNeck'),
+          bfWaist=document.getElementById('bfWaist'), bfHip=document.getElementById('bfHip'), bfHipWrap=document.getElementById('bfHipWrap'),
+          bfWeight=document.getElementById('bfWeight');
+    bfSex.onchange = ()=> bfHipWrap.style.display = (bfSex.value==='female')?'block':'none';
+
+    function log10(x){ return Math.log(x)/Math.LN10; }
+    function estimateBfp(){
+      const sex = bfSex.value;
+      const h = num(bfHeight.value), n=num(bfNeck.value), w=num(bfWaist.value), hip=num(bfHip.value), kg=num(bfWeight.value);
+      if([h,n,w,kg].some(v=>v==null) || (sex==='female' && hip==null)){ showErr('bfResult','Please fill required fields.'); return null; }
+      // Convert to inches
+      const hi = h/2.54, ni=n/2.54, wi=w/2.54, hpi=(hip||0)/2.54;
+      let bfp;
+      if(sex==='male'){
+        bfp = 86.010*log10(wi - ni) - 70.041*log10(hi) + 36.76;
+      } else {
+        bfp = 163.205*log10(wi + hpi - ni) - 97.684*log10(hi) - 78.387;
+      }
+      bfp = Math.max(3, Math.min(60, bfp));
+      const out=document.getElementById('bfResult'); out.style.display='block'; out.className='notice ok';
+      out.innerHTML = `<strong>Estimated Body Fat:</strong> ${bfp.toFixed(1)}% <span class="muted">(${sex})</span>`;
+      AppState.latestBfp = { sex, h, n, w, hip:hip||null, kg, bfp: +bfp.toFixed(1) };
+      return AppState.latestBfp;
+    }
+    document.getElementById('bfCalc').onclick = estimateBfp;
+
+    // Log table
+    const tableBody = document.querySelector('#measureTable tbody');
+    function renderLogs(){
+      tableBody.innerHTML = '';
+      AppState.measurements.forEach((m, idx)=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML = `<td>${m.date}</td><td>${m.kg}kg</td><td>${m.bfp??'-'}%</td><td>${m.waist??'-'}cm</td><td>${m.neck??'-'}cm</td><td>${m.hip??'-'}cm</td>
+                        <td><button class="btn btn-outline" data-del="${idx}" style="padding:6px 10px">Delete</button></td>`;
+        tableBody.appendChild(tr);
+      });
+    }
+    tableBody.onclick = e=>{
+      const btn = e.target.closest('button[data-del]'); if(!btn) return;
+      const idx = +btn.dataset.del; AppState.measurements.splice(idx,1); renderLogs();
+    };
+    document.getElementById('addMeasurement').onclick = ()=>{
+      const latest = estimateBfp() || {};
+      const entry = {
+        date: new Date().toISOString().slice(0,10),
+        kg: num(bfWeight.value)??'-',
+        bfp: latest.bfp ?? null,
+        waist: num(bfWaist.value)??null,
+        neck: num(bfNeck.value)??null,
+        hip: (bfSex.value==='female'? num(bfHip.value): null)
+      };
+      AppState.measurements.push(entry); renderLogs(); toast('Measurement added.');
+    };
+    document.getElementById('addLogToSummary').onclick = ()=> toast('Log will be included in PDF.');
+
+    // ---------- Progression Planner ----------
+    const progBody = document.querySelector('#progTable tbody');
+    function buildProgression(){
+      const exercise = document.getElementById('prExercise').value||'Exercise';
+      const start = num(document.getElementById('prStart').value)||0;
+      const inc = num(document.getElementById('prInc').value)||0;
+      const scheme = document.getElementById('prScheme').value||'3×5';
+      const freq = Math.max(1, parseInt(document.getElementById('prFreq').value||'3',10));
+      const weeks = Math.max(1, parseInt(document.getElementById('prWeeks').value||'8',10));
+
+      const rows=[];
+      let s = start;
+      for(let w=1; w<=weeks; w++){
+        for(let f=1; f<=freq; f++){
+          rows.push({ idx: rows.length+1, week:w, session:f, weight:+s.toFixed(1), scheme });
+          s += inc;
+        }
+      }
+      progBody.innerHTML='';
+      rows.forEach(r=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML = `<td>${r.idx}</td><td>${r.week}</td><td>${r.session}</td><td>${r.weight}</td><td>${r.scheme}</td>`;
+        progBody.appendChild(tr);
+      });
+      AppState.progression = { exercise, rows };
+      toast('Progression plan built.');
+    }
+    document.getElementById('prBuild').onclick = buildProgression;
+    document.getElementById('addProgToSummary').onclick = ()=> toast('Progression will be in PDF.');
+
+    // ---------- Nutrition Helpers ----------
+    const nhBody = document.querySelector('#nhTable tbody');
+    document.getElementById('nhBuild').onclick = ()=>{
+      const P=num(document.getElementById('nhP').value)||0;
+      const C=num(document.getElementById('nhC').value)||0;
+      const F=num(document.getElementById('nhF').value)||0;
+      const meals=Math.max(1, parseInt(document.getElementById('nhMeals').value||'4', 10));
+      let heavy = Math.min(meals, Math.max(1, parseInt(document.getElementById('nhHeavy').value||'2',10))) - 1;
+
+      // equal weights, heavy meal gets +25%, then renormalize
+      let weights = Array(meals).fill(1);
+      weights[heavy] = 1.25;
+      const sumW = weights.reduce((a,b)=>a+b,0);
+      weights = weights.map(w=>w/sumW);
+
+      nhBody.innerHTML='';
+      const rows=[];
+      for(let i=0;i<meals;i++){
+        const pr = Math.round(P*weights[i]);
+        const cr = Math.round(C*weights[i]);
+        const fr = Math.round(F*weights[i]);
+        const cal = pr*4 + cr*4 + fr*9;
+        rows.push({ meal:i+1, pr, cr, fr, cal });
+        const tr=document.createElement('tr');
+        tr.innerHTML=`<td>Meal ${i+1}</td><td>${pr} g</td><td>${cr} g</td><td>${fr} g</td><td>${cal}</td>`;
+        nhBody.appendChild(tr);
+      }
+      AppState.meals = rows;
+      toast('Meal macro split created.');
+    };
+    document.getElementById('addNutriToSummary').onclick = ()=> toast('Meal split will be in PDF.');
+
+    // Hydration
+    document.getElementById('hyCalc').onclick = ()=>{
+      const kg = num(document.getElementById('hyKg').value)||0;
+      const min = Math.max(0, num(document.getElementById('hyMin').value)||0);
+      const climate = document.getElementById('hyClimate').value;
+      let ml = kg*35 + (min/30)*500; // 35 ml/kg + 500 ml per 30 min
+      if(climate==='hot') ml *= 1.2;
+      const L = (ml/1000);
+      const out = document.getElementById('hyResult');
+      out.style.display='block'; out.className='notice ok';
+      out.innerHTML = `<strong>Suggested daily water:</strong> ${L.toFixed(2)} L <span class="muted">(${Math.round(ml)} ml)</span>`;
+      AppState.hydration = { kg, min, climate, liters:+L.toFixed(2) };
+    };
+
+    // ---------- Recovery ----------
+    // Sleep
+    document.getElementById('slCalc').onclick = ()=>{
+      const t = document.getElementById('slWake').value || '07:00';
+      const cycles = Math.max(3, Math.min(7, parseInt(document.getElementById('slCycles').value||'5',10)));
+      const [hh,mm] = t.split(':').map(x=>parseInt(x,10));
+      const wake = new Date(); wake.setHours(hh, mm, 0, 0);
+      const minsBack = cycles*90 + 15; // fall asleep buffer
+      const bed = new Date(wake.getTime() - minsBack*60000);
+      const fmt = (d)=> `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+      const out = document.getElementById('slResult');
+      out.style.display='block'; out.className='notice ok';
+      out.innerHTML = `<strong>Go to bed around:</strong> ${fmt(bed)} <span class="muted">(for ${cycles} cycles)</span>`;
+      AppState.sleep = { wake:t, cycles, bedtime:fmt(bed) };
+    };
+    // RPE
+    document.getElementById('rpeCalc').onclick = ()=>{
+      const rpe = parseFloat(document.getElementById('rpe').value||'8.5');
+      const reps = Math.max(1, parseInt(document.getElementById('rpeReps').value||'5',10));
+      const oneRm = num(document.getElementById('rpeOneRm').value);
+
+      const base = {1:100,2:95,3:92,4:89,5:86,6:83,7:80,8:77,9:74,10:71};
+      const basePct = base[reps] || Math.max(40, 100 - 3*reps); // fallback
+      const rir = Math.max(0, 10 - rpe);
+      let pct = basePct - (rir*2.5);
+      pct = Math.max(40, Math.min(100, pct));
+      const load = oneRm? Math.round(oneRm*pct/100) : null;
+
+      const out = document.getElementById('rpeResult');
+      out.style.display='block'; out.className='notice ok';
+      out.innerHTML = `<strong>~${pct.toFixed(1)}%</strong> of 1RM` + (load? ` → <strong>${load}</strong> (approx load)` : '');
+      AppState.rpe = { rpe, reps, pct:+pct.toFixed(1), oneRm:oneRm||null, load };
+    };
+
+    // ---------- Fun ----------
+    document.getElementById('stCalc').onclick = ()=>{
+      const d = document.getElementById('stDate').value;
+      const tgt = Math.max(1, Math.min(7, parseInt(document.getElementById('stTarget').value||'4',10)));
+      if(!d){ showErr('stResult','Pick a start date.'); return; }
+      const start = new Date(d+'T00:00:00');
+      const today = new Date();
+      const days = Math.floor((today - start)/86400000) + 1;
+      const weeks = Math.max(1, Math.floor(days/7));
+      const expected = weeks * tgt;
+      const out = document.getElementById('stResult'); out.style.display='block'; out.className='notice ok';
+      out.innerHTML = `<strong>${days}</strong> days since start • target <strong>${tgt}</strong>/wk → expected <strong>${expected}</strong> sessions`;
+      AppState.streak = { start:d, target:tgt, days, weeks, expected };
+    };
+    const challenges = [
+      "100 walking lunges today",
+      "12k steps — outdoors if you can",
+      "5 sets of 10 push-ups + 10 rows",
+      "3× : 60s plank • 20s side-plank each side",
+      "Every hour: 10 air squats",
+      "Finisher: 6 rounds — 30s fast / 30s easy cardio",
+      "Try a new fruit/veg today + 2 extra glasses of water",
+    ];
+    document.getElementById('chSpin').onclick = ()=>{
+      const text = challenges[Math.floor(Math.random()*challenges.length)];
+      const out=document.getElementById('chResult'); out.style.display='block'; out.className='notice ok';
+      out.textContent = text; AppState.challenge = text;
+    };
+
+    // ---------- Shared helpers ----------
+    function showErr(id, text){ const el=document.getElementById(id); el.style.display='block'; el.className='notice err'; el.textContent=text; }
+    function toast(text){
+      // light inline toast using a transient notice at the top of the card
+      let n=document.querySelector('[data-toast]');
+      if(!n){ n=document.createElement('div'); n.setAttribute('data-toast',''); n.className='notice ok'; n.style.position='fixed'; n.style.top='14px'; n.style.left='50%'; n.style.transform='translateX(-50%)'; n.style.zIndex='9999'; n.style.maxWidth='92%'; n.style.boxShadow='0 12px 28px rgba(0,0,0,.35)'; document.body.appendChild(n); }
+      n.textContent=text; n.style.display='block'; setTimeout(()=>{ n.style.display='none'; }, 2200);
+    }
+
+    // ---------- PDF EXPORT ----------
+    document.getElementById('downloadPdfBtn').onclick = async ()=>{
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit:'pt', format:'a4' });
+      let y=60, line= (t, sz=12, bold=false)=>{ doc.setFont('helvetica', bold?'bold':'normal'); doc.setFontSize(sz); doc.text(t, 46, y); y+= sz+10; };
+      let hr=()=>{ doc.setDrawColor(224,33,33); doc.setLineWidth(1); doc.line(46,y,549,y); y+=14; };
+
+      // Header
+      doc.setFillColor(224,33,33); doc.rect(0,0,595,8,'F');
+      doc.setTextColor(20,20,20); doc.setFont('helvetica','bold'); doc.setFontSize(18);
+      doc.text('Gym Utilities — Snapshot', 46, 34);
+      doc.setTextColor(50,50,50); doc.setFont('helvetica','normal'); doc.setFontSize(10);
+      doc.text(new Date().toLocaleString(), 460, 34);
+
+      y=70;
+      if(AppState.macros){ hr(); doc.setTextColor(30,30,30); line('Macros & TDEE',14,true);
+        line(`Calories: ${AppState.macros.calories} kcal  •  P ${AppState.macros.proteinG}g  C ${AppState.macros.carbsG}g  F ${AppState.macros.fatG}g`,12); }
+      if(AppState.plan){ hr(); line('Beginner Plan',14,true);
+        line(AppState.plan.split,12);
+        AppState.plan.schedule.slice(0,6).forEach(s=>line('• '+s,11)); }
+      if(AppState.latestBfp){ hr(); line('Body Fat',14,true);
+        line(`Estimated: ${AppState.latestBfp.bfp}% (${AppState.latestBfp.sex})`,12); }
+      if(AppState.measurements?.length){ hr(); line('Measurements (latest 5)',14,true);
+        AppState.measurements.slice(-5).forEach(m=> line(`${m.date} — ${m.kg}kg, ${m.bfp??'-'}% BF, waist ${m.waist??'-'}cm`,11)); }
+      if(AppState.progression){ hr(); line('Progression',14,true);
+        const rows=AppState.progression.rows; if(rows?.length){ const first=rows[0], last=rows[rows.length-1]; line(`${AppState.progression.exercise}: ${first.weight} ➜ ${last.weight} (${rows.length} sessions)`,12); } }
+      if(AppState.meals){ hr(); line('Meals Split',14,true);
+        AppState.meals.slice(0,5).forEach(m=> line(`Meal ${m.meal}: P${m.pr} C${m.cr} F${m.fr} — ${m.cal} kcal`,11)); }
+      if(AppState.hydration){ hr(); line('Hydration',14,true); line(`${AppState.hydration.liters} L/day (approx)`,12); }
+      if(AppState.sleep){ hr(); line('Sleep',14,true); line(`Bedtime: ${AppState.sleep.bedtime} for ${AppState.sleep.cycles} cycles`,12); }
+      if(AppState.rpe){ hr(); line('RPE',14,true); line(`~${AppState.rpe.pct}% 1RM` + (AppState.rpe.load? ` • Load ~${AppState.rpe.load}`:''),12); }
+      if(AppState.streak){ hr(); line('Streak',14,true); line(`${AppState.streak.days} days since ${AppState.streak.start}, target ${AppState.streak.target}/wk`,12); }
+      if(AppState.challenge){ hr(); line('Challenge',14,true); line(AppState.challenge,12); }
+
+      // Embed data payload (base64) so we can restore later
+      const payload = btoa(unescape(encodeURIComponent(JSON.stringify(AppState))));
+      const footer = `DATA::${payload}`;
+      doc.setFont('courier','normal'); doc.setFontSize(8); doc.setTextColor(120,120,120);
+      doc.text(footer, 46, 820, { maxWidth: 503 });
+
+      doc.save('Gym_Utilities_Snapshot.pdf');
+      toast('PDF downloaded.');
+    };
+
+    // ---------- PDF RESTORE ----------
+    document.getElementById('pdfUpload').addEventListener('change', async (e)=>{
+      const file = e.target.files[0]; if(!file) return;
+      try{
+        const buf = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+        let text=''; for(let i=1;i<=pdf.numPages;i++){ const p = await pdf.getPage(i); const c = await p.getTextContent(); text += c.items.map(it=>it.str).join('\n') + '\n'; }
+        const idx = text.lastIndexOf('DATA::');
+        if(idx<0){ toast('No embedded data found in PDF.'); return; }
+        const b64 = text.slice(idx+6).trim();
+        const json = JSON.parse(decodeURIComponent(escape(atob(b64))));
+        Object.assign(AppState, json || {});
+        repopulateFromState();
+        toast('Restored from PDF.');
+      }catch(err){ console.error(err); toast('Failed to read PDF.'); }
+    });
+
+    // ---------- Repopulate UI from state ----------
+    function repopulateFromState(){
+      if(AppState.macros){
+        const { calories, proteinG, carbsG, fatG } = AppState.macros;
+        const out = document.getElementById('macroResult');
+        out.style.display='block'; out.className='notice ok';
+        out.innerHTML = `
+          <div style="display:flex;justify-content:space-between;"><strong>Calories</strong><span>${calories.toLocaleString()} kcal/day</span></div>
+          <hr style="border:0;border-top:1px solid ${getComputedStyle(document.body).getPropertyValue('--border')};margin:8px 0">
+          <div class="grid three">
+            <div><strong>Protein</strong><br>${proteinG} g</div>
+            <div><strong>Carbs</strong><br>${carbsG} g</div>
+            <div><strong>Fat</strong><br>${fatG} g</div>
+          </div>`;
+      }
+      if(AppState.plan){
+        const out = document.getElementById('planResult'); out.style.display='block'; out.className='notice ok';
+        out.innerHTML = `<strong>Recommended split:</strong> ${AppState.plan.split}
+          <ul style="margin:8px 0 6px">${AppState.plan.schedule.map(s=>`<li>${s}</li>`).join('')}</ul>
+          <div class="small muted">${AppState.plan.note}</div>`;
+      }
+      if(AppState.latestBfp){
+        const out=document.getElementById('bfResult'); out.style.display='block'; out.className='notice ok';
+        out.innerHTML = `<strong>Estimated Body Fat:</strong> ${AppState.latestBfp.bfp}% <span class="muted">(${AppState.latestBfp.sex})</span>`;
+      }
+      if(AppState.measurements){ renderLogs(); }
+      if(AppState.progression){
+        const rows=AppState.progression.rows||[]; const body=document.querySelector('#progTable tbody');
+        body.innerHTML=''; rows.forEach(r=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${r.idx}</td><td>${r.week}</td><td>${r.session}</td><td>${r.weight}</td><td>${r.scheme||''}</td>`; body.appendChild(tr); });
+      }
+      if(AppState.meals){
+        const body=document.querySelector('#nhTable tbody'); body.innerHTML='';
+        AppState.meals.forEach(m=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>Meal ${m.meal}</td><td>${m.pr} g</td><td>${m.cr} g</td><td>${m.fr} g</td><td>${m.cal}</td>`; body.appendChild(tr); });
+      }
+      if(AppState.hydration){
+        const out = document.getElementById('hyResult'); out.style.display='block'; out.className='notice ok';
+        out.innerHTML = `<strong>Suggested daily water:</strong> ${AppState.hydration.liters.toFixed(2)} L`;
+      }
+      if(AppState.sleep){
+        const out = document.getElementById('slResult'); out.style.display='block'; out.className='notice ok';
+        out.innerHTML = `<strong>Bedtime:</strong> ${AppState.sleep.bedtime} <span class="muted">(${AppState.sleep.cycles} cycles)</span>`;
+      }
+      if(AppState.rpe){
+        const out = document.getElementById('rpeResult'); out.style.display='block'; out.className='notice ok';
+        out.innerHTML = `<strong>~${AppState.rpe.pct}%</strong> of 1RM` + (AppState.rpe.load? ` → <strong>${AppState.rpe.load}</strong>`:'');
+      }
+      if(AppState.streak){
+        const out = document.getElementById('stResult'); out.style.display='block'; out.className='notice ok';
+        out.innerHTML = `<strong>${AppState.streak.days}</strong> days since ${AppState.streak.start} • target ${AppState.streak.target}/wk`;
+      }
+      if(AppState.challenge){
+        const out = document.getElementById('chResult'); out.style.display='block'; out.className='notice ok'; out.textContent = AppState.challenge;
+      }
+    }
+  </script>
+
+</body>
+</html>
