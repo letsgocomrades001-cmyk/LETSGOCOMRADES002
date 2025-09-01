@@ -1,9 +1,8 @@
-name: Deploy static site to Pages
+name: Deploy static site to GitHub Pages
 
 on:
   push:
-    branches: [ "main" ]
-  workflow_dispatch:
+    branches: [ main ]  # change if your default branch is different
 
 permissions:
   contents: read
@@ -12,22 +11,41 @@ permissions:
 
 concurrency:
   group: "pages"
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      # Create a clean output folder and copy your site files into it
+      - name: Prepare site
+        run: |
+          rm -rf _site
+          mkdir _site
+          rsync -av --delete \
+            --exclude '.git' \
+            --exclude '.github' \
+            --exclude 'node_modules' \
+            --exclude 'README.md' \
+            ./ _site/
+
+      # Ensure CNAME is present in the deployed artifact
+      - name: Add CNAME
+        run: echo "www.letsgocomrades.com" > _site/CNAME
+
+      - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: .   # uploads index.html + css/js/images in repo root
+          path: _site
+
   deploy:
-    runs-on: ubuntu-latest
     needs: build
+    runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deploy.outputs.page_url }}
     steps:
-      - id: deployment
+      - id: deploy
         uses: actions/deploy-pages@v4
