@@ -4,161 +4,184 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Gym Utilities</title>
+    <!-- Favicons & PWA (files live in /assets/) -->
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="icon" href="assets/favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="assets/site.webmanifest">
+  <meta name="theme-color" content="#171819">
 
-  <!-- ====== GYMSO-STYLE THEME (same palette, modern UI) ====== -->
   <style>
-    :root{
-      /* Gymso palette */
-      --bg:#171819;
-      --panel:rgba(255,255,255,.035);
-      --panel-solid:#1b1c1e;
-      --border:rgba(255,255,255,.08);
-      --ink:#ffffff;
-      --muted:#c9c9c9;
-      --primary:#e02121;           /* Gymso red */
-      --primary-ink:#ffffff;
-      --ring:rgba(224,33,33,.45);
-      --radius:16px;
-      --radius-sm:12px;
-      --elev-1: 0 14px 40px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.02);
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0; background:var(--bg); color:var(--ink);
-      font-family: "Open Sans", Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial;
-      -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
-      background-image:
-        radial-gradient(1000px 600px at 120% -10%, rgba(224,33,33,.08), transparent 60%),
-        radial-gradient(800px 500px at -10% 10%, rgba(255,255,255,.04), transparent 60%);
-      background-attachment: fixed;
-    }
+  .home-fab{
+    position: fixed; left: 20px; bottom: 20px; z-index: 9999;
+    display:inline-flex; align-items:center; gap:8px;
+    background:#111214; color:#fff; border:1px solid var(--border); border-radius:999px;
+    padding:10px 14px; font-weight:800; text-decoration:none; cursor:pointer;
+    box-shadow:0 12px 28px rgba(0,0,0,.35); transition:.2s;
+  }
+  .home-fab:hover{
+    background:linear-gradient(135deg,#e02121,#b01a1a); border-color:#e02121;
+    transform: translateY(-1px); box-shadow:0 18px 36px rgba(224,33,33,.35);
+  }
 
-    .container{ max-width:1180px; margin:28px auto; padding:0 18px; }
-    .card{
-      backdrop-filter: blur(10px) saturate(115%);
-      background:var(--panel);
-      border:1px solid var(--border);
-      border-radius:var(--radius);
-      box-shadow:var(--elev-1);
-      overflow:hidden;
-      position:relative;
-    }
-    /* Red accent top bar */
-    .card::before{
-      content:""; position:absolute; inset:0 0 auto 0; height:3px;
-      background:linear-gradient(90deg, rgba(224,33,33,1), rgba(224,33,33,.6));
-      filter: drop-shadow(0 0 10px rgba(224,33,33,.55));
-    }
-    .card-header{
-      padding:22px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
-    }
-    .title{
-      margin:0; display:flex; align-items:center; gap:10px;
-      font-size: clamp(22px, 3vw, 30px); font-weight:800; letter-spacing:.2px;
-    }
-    .title .dot{
-      width:12px; height:12px; border-radius:50%;
-      background:radial-gradient(circle at 35% 35%, #fff, #e87a7a 55%, transparent 65%);
-      box-shadow:0 0 18px rgba(224,33,33,.65), inset 0 0 6px rgba(255,255,255,.35);
-    }
+/* === Fix: readable dropdown lists in dark UI === */
+.select { color:#fff; } /* keep the closed control white on dark */
 
-    .toolbar{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
-    .upload{
-      display:flex; gap:10px; align-items:center; flex-wrap:wrap;
-      background:rgba(255,255,255,.03);
-      border:1px dashed var(--border); border-radius:12px; padding:10px 12px;
-    }
-    .upload input[type="file"]{ color:var(--ink); border:none; background:transparent; padding:6px 0; cursor:pointer; }
-    .card-body{ padding:18px; }
+.select option,
+.select optgroup {
+  /* Most browsers render the popup with a light background by default */
+  color:#111 !important;
+  background:#fff !important;
+}
 
-    /* Utilities pill bar (top, no dropdown) */
-    .util-bar{
-      display:flex; gap:10px; overflow:auto; scrollbar-width:thin;
-      padding:12px; border-top:1px solid var(--border); border-bottom:1px solid var(--border);
-      background:rgba(255,255,255,.02);
-    }
-    .util-btn{
-      flex:0 0 auto; white-space:nowrap;
-      border:1px solid var(--border); color:#f0f0f0; background:rgba(255,255,255,.02);
-      border-radius:999px; padding:10px 14px; font-weight:700; font-size:14px;
-      transition:.2s; cursor:pointer;
-    }
-    .util-btn:hover{ border-color:rgba(224,33,33,.6); color:#fff; box-shadow:0 8px 24px rgba(224,33,33,.18) }
-    .util-btn.active{
-      color:var(--primary-ink); border-color:transparent;
-      background: linear-gradient(135deg, #e02121 0%, #a21515 100%);
-      box-shadow:0 10px 30px rgba(224,33,33,.35);
-    }
+/* If the OS/browser presents a dark popup, flip colors to stay readable */
+@media (prefers-color-scheme: dark) {
+  .select option,
+  .select optgroup {
+    color:#f3f3f3 !important;
+    background:#1f2123 !important;
+  }
+}
 
-    /* Inputs & buttons */
-    .field label{ display:block; font-weight:800; margin:6px 0 6px; color:#fff }
-    .hint{ font-size:12px; color:var(--muted) }
-    .input, .select, .range, .textarea{
-      width:100%; padding:12px 12px; border-radius:12px; font-size:16px;
-      color:#fff; background:rgba(255,255,255,.04); border:1px solid var(--border);
-      outline:none; transition:.15s; box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
-    }
-    .input:focus, .select:focus, .range:focus, .textarea:focus{ border-color:var(--primary); box-shadow:0 0 0 3px var(--ring) }
+/* Optional: nicer highlight for the selected option in the list */
+.select option:checked {
+  background: #e0212126 !important; /* subtle red tint */
+}
 
-    .btn{
-      display:inline-flex; align-items:center; justify-content:center; gap:8px;
-      border:1px solid #000; background:#111214; color:#fff;
-      border-radius:12px; padding:12px 16px; font-weight:800; cursor:pointer; transition:.2s;
-      box-shadow:0 6px 16px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.05);
-    }
-    .btn:hover{
-      background:linear-gradient(135deg, #e02121, #b01a1a);
-      border-color:#e02121; transform:translateY(-1px);
-      box-shadow:0 12px 28px rgba(224,33,33,.35);
-    }
-    .btn:active{ transform:none }
-    .btn-outline{
-      background:rgba(255,255,255,.04); border:1px solid var(--border); color:#f0f0f0;
-    }
-    .btn-outline:hover{ color:#fff }
+  :root{
+    --bg:#171819;
+    --panel:rgba(255,255,255,.035);
+    --panel-solid:#1b1c1e;
+    --border:rgba(255,255,255,.08);
+    --ink:#ffffff;
+    --muted:#c9c9c9;
+    --primary:#e02121;
+    --primary-ink:#ffffff;
+    --ring:rgba(224,33,33,.45);
+    --radius:16px;
+    --radius-sm:12px;
+    --elev-1: 0 14px 40px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.02);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family: "Open Sans", Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial;
+    -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+    background-image:
+      radial-gradient(1000px 600px at 120% -10%, rgba(224,33,33,.08), transparent 60%),
+      radial-gradient(800px 500px at -10% 10%, rgba(255,255,255,.04), transparent 60%);
+    background-attachment: fixed;
+  }
 
-    .actions-row{ display:flex; gap:10px; flex-wrap:wrap }
+  .container{ max-width:1180px; margin:28px auto; padding:0 18px; }
+  .card{
+    backdrop-filter: blur(10px) saturate(115%);
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    box-shadow:var(--elev-1);
+    overflow:hidden;
+    position:relative;
+  }
+  .card::before{
+    content:""; position:absolute; inset:0 0 auto 0; height:3px;
+    background:linear-gradient(90deg, rgba(224,33,33,1), rgba(224,33,33,.6));
+    filter: drop-shadow(0 0 10px rgba(224,33,33,.55));
+  }
+  .card-header{
+    padding:22px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+  }
+  .title{
+    margin:0; display:flex; align-items:center; gap:10px;
+    font-size: clamp(22px, 3vw, 30px); font-weight:800; letter-spacing:.2px;
+  }
+  .title .dot{
+    width:12px; height:12px; border-radius:50%;
+    background:radial-gradient(circle at 35% 35%, #fff, #e87a7a 55%, transparent 65%);
+    box-shadow:0 0 18px rgba(224,33,33,.65), inset 0 0 6px rgba(255,255,255,.35);
+  }
 
-    /* Layout */
-    .grid{ display:grid; gap:14px }
-    .two{ grid-template-columns:1fr 1fr }
-    .three{ grid-template-columns:repeat(3,1fr) }
-    @media (max-width:880px){ .two{grid-template-columns:1fr} .three{grid-template-columns:1fr} }
+  .toolbar{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  .upload{
+    display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+    background:rgba(255,255,255,.03);
+    border:1px dashed var(--border); border-radius:12px; padding:10px 12px;
+  }
+  .upload input[type="file"]{ color:var(--ink); border:none; background:transparent; padding:6px 0; cursor:pointer; }
+  .card-body{ padding:18px; }
 
-    /* Sections */
-    .section-panel{ display:none; animation:fade .2s ease-out }
-    .section-panel.active{ display:block }
-    @keyframes fade{ from{opacity:.6; transform:translateY(4px)} to{opacity:1; transform:none} }
+  .util-bar{
+    display:flex; gap:10px; overflow:auto; scrollbar-width:thin;
+    padding:12px; border-top:1px solid var(--border); border-bottom:1px solid var(--border);
+    background:rgba(255,255,255,.02);
+  }
+  .util-btn{
+    flex:0 0 auto; white-space:nowrap;
+    border:1px solid var(--border); color:#f0f0f0; background:rgba(255,255,255,.02);
+    border-radius:999px; padding:10px 14px; font-weight:700; font-size:14px;
+    transition:.2s; cursor:pointer;
+  }
+  .util-btn:hover{ border-color:rgba(224,33,33,.6); color:#fff; box-shadow:0 8px 24px rgba(224,33,33,.18) }
+  .util-btn.active{
+    color:var(--primary-ink); border-color:transparent;
+    background: linear-gradient(135deg, #e02121 0%, #a21515 100%);
+    box-shadow:0 10px 30px rgba(224,33,33,.35);
+  }
 
-    .notice{
-      border-radius:12px; padding:12px 14px; font-weight:700;
-      border:1px solid var(--border); background:rgba(255,255,255,.03);
-      color:#fff; box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
-    }
-    .notice.ok{ border-color:rgba(34,197,94,.35); background:linear-gradient(180deg, rgba(34,197,94,.1), rgba(34,197,94,.03)); color:#dbffe8 }
-    .notice.err{ border-color:rgba(239,68,68,.35); background:linear-gradient(180deg, rgba(239,68,68,.1), rgba(239,68,68,.03)); color:#ffe7e7 }
+  .field label{ display:block; font-weight:800; margin:6px 0 6px; color:#fff }
+  .hint{ font-size:12px; color:var(--muted) }
+  .input, .select, .range, .textarea{
+    width:100%; padding:12px 12px; border-radius:12px; font-size:16px;
+    color:#fff; background:rgba(255,255,255,.04); border:1px solid var(--border);
+    outline:none; transition:.15s; box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
+  }
+  .input:focus, .select:focus, .range:focus, .textarea:focus{ border-color:var(--primary); box-shadow:0 0 0 3px var(--ring) }
 
-    .table{
-      width:100%; border-collapse:collapse; overflow:hidden; border-radius:12px;
-      border:1px solid var(--border); background:rgba(255,255,255,.02);
-    }
-    .table th,.table td{ padding:10px 12px; border-bottom:1px solid var(--border); text-align:left; font-size:14px; color:#f3f3f3 }
-    .table thead th{ background:rgba(255,255,255,.05); font-weight:900; color:#fff }
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    border:1px solid #000; background:#111214; color:#fff;
+    border-radius:12px; padding:12px 16px; font-weight:800; cursor:pointer; transition:.2s;
+    box-shadow:0 6px 16px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.05);
+  }
+  .btn:hover{
+    background:linear-gradient(135deg, #e02121, #b01a1a);
+    border-color:#e02121; transform:translateY(-1px);
+    box-shadow:0 12px 28px rgba(224,33,33,.35);
+  }
+  .btn:active{ transform:none }
+  .btn-outline{ background:rgba(255,255,255,.04); border:1px solid var(--border); color:#f0f0f0; }
+  .btn-outline:hover{ color:#fff }
 
-    details{
-      border:1px solid var(--border); border-radius:12px; padding:12px 14px;
-      background:rgba(255,255,255,.03); color:#fff;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
-    }
-    details+details{ margin-top:12px }
-    summary{ cursor:pointer; font-weight:900 }
+  .actions-row{ display:flex; gap:10px; flex-wrap:wrap }
+  .grid{ display:grid; gap:14px }
+  .two{ grid-template-columns:1fr 1fr }
+  .three{ grid-template-columns:repeat(3,1fr) }
+  @media (max-width:880px){ .two{grid-template-columns:1fr} .three{grid-template-columns:1fr} }
 
-    .pill{
-      display:inline-block; padding:6px 10px; border:1px solid var(--border); border-radius:999px; background:rgba(255,255,255,.04); color:#fff; font-size:13px; font-weight:800;
-    }
-    .muted{ color:var(--muted) }
-    .small{ font-size:13px }
+  .section-panel{ display:none; animation:fade .2s ease-out }
+  .section-panel.active{ display:block }
+  @keyframes fade{ from{opacity:.6; transform:translateY(4px)} to{opacity:1; transform:none} }
+
+  .notice{
+    border-radius:12px; padding:12px 14px; font-weight:700;
+    border:1px solid var(--border); background:rgba(255,255,255,.03);
+    color:#fff; box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
+  }
+  .notice.ok{ border-color:rgba(34,197,94,.35); background:linear-gradient(180deg, rgba(34,197,94,.1), rgba(34,197,94,.03)); color:#dbffe8 }
+  .notice.err{ border-color:rgba(239,68,68,.35); background:linear-gradient(180deg, rgba(239,68,68,.1), rgba(239,68,68,.03)); color:#ffe7e7 }
+
+  .table{ width:100%; border-collapse:collapse; overflow:hidden; border-radius:12px; border:1px solid var(--border); background:rgba(255,255,255,.02); }
+  .table th,.table td{ padding:10px 12px; border-bottom:1px solid var(--border); text-align:left; font-size:14px; color:#f3f3f3 }
+  .table thead th{ background:rgba(255,255,255,.05); font-weight:900; color:#fff }
+
+  details{ border:1px solid var(--border); border-radius:12px; padding:12px 14px; background:rgba(255,255,255,.03); color:#fff; box-shadow: inset 0 1px 0 rgba(255,255,255,.03); }
+  details+details{ margin-top:12px }
+  summary{ cursor:pointer; font-weight:900 }
+
+  .pill{ display:inline-block; padding:6px 10px; border:1px solid var(--border); border-radius:999px; background:rgba(255,255,255,.04); color:#fff; font-size:13px; font-weight:800; }
+  .muted{ color:var(--muted) }
+  .small{ font-size:13px }
   </style>
 </head>
 <body>
@@ -177,7 +200,6 @@
         </div>
       </div>
 
-      <!-- TOP UTILITIES (no dropdown; Gymso red accent) -->
       <div class="util-bar" id="utilBar">
         <button class="util-btn active" data-target="macros">🔥 Macros & TDEE</button>
         <button class="util-btn" data-target="beginner">🧭 Beginner Plan</button>
@@ -189,7 +211,7 @@
       </div>
 
       <div class="card-body">
-        <!-- ============ MACROS / TDEE ============ -->
+        <!-- MACROS -->
         <section id="macros" class="section-panel active" aria-labelledby="tab-macros">
           <h2 style="margin:6px 0 12px">BMR / TDEE & Macros</h2>
           <p class="muted small">Mifflin–St Jeor · choose units, fill details, set a goal → calories & macros.</p>
@@ -201,14 +223,13 @@
                 <button id="unitImperial" class="btn btn-outline">Imperial</button>
               </div>
 
-              <!-- Metric -->
               <div id="metricBox" style="margin-top:12px">
                 <div class="grid two">
                   <div class="field"><label>Weight (kg)</label><input id="mWeight" class="input" type="number" min="20" max="400" step="0.1" placeholder="70"></div>
                   <div class="field"><label>Height (cm)</label><input id="mHeight" class="input" type="number" min="100" max="250" step="0.1" placeholder="175"></div>
                 </div>
               </div>
-              <!-- Imperial -->
+
               <div id="imperialBox" style="display:none; margin-top:12px">
                 <div class="grid three">
                   <div class="field"><label>Weight (lb)</label><input id="iWeight" class="input" type="number" min="50" max="900" step="0.1" placeholder="154"></div>
@@ -276,7 +297,7 @@
           </div>
         </section>
 
-        <!-- ============ BEGINNER PLAN ============ -->
+        <!-- BEGINNER PLAN -->
         <section id="beginner" class="section-panel" aria-labelledby="tab-beginner">
           <h2 style="margin:6px 0 12px">Beginner Plan Picker</h2>
           <div class="grid two">
@@ -310,7 +331,7 @@
           </div>
         </section>
 
-        <!-- ============ BODY FAT & MEASUREMENTS ============ -->
+        <!-- BODY FAT -->
         <section id="bodyfat" class="section-panel" aria-labelledby="tab-bodyfat">
           <h2 style="margin:6px 0 12px">Body Fat & Measurements</h2>
           <p class="small muted">Quick body-fat estimate (U.S. Navy). Track changes in a log.</p>
@@ -355,7 +376,7 @@
           </div>
         </section>
 
-        <!-- ============ PROGRESSION PLANNER ============ -->
+        <!-- PROGRESSION -->
         <section id="progression" class="section-panel" aria-labelledby="tab-progression">
           <h2 style="margin:6px 0 12px">Progression Planner</h2>
           <p class="small muted">Linear progression table for a lift.</p>
@@ -388,7 +409,7 @@
           </div>
         </section>
 
-        <!-- ============ NUTRITION HELPERS ============ -->
+        <!-- NUTRITION -->
         <section id="nutrition" class="section-panel" aria-labelledby="tab-nutrition">
           <h2 style="margin:6px 0 12px">Nutrition Helpers</h2>
 
@@ -429,7 +450,7 @@
           </details>
         </section>
 
-        <!-- ============ RECOVERY ============ -->
+        <!-- RECOVERY -->
         <section id="recovery" class="section-panel" aria-labelledby="tab-recovery">
           <h2 style="margin:6px 0 12px">Recovery Tools</h2>
           <div class="grid two">
@@ -455,7 +476,7 @@
           </div>
         </section>
 
-        <!-- ============ FUN & ENGAGEMENT ============ -->
+        <!-- FUN -->
         <section id="fun" class="section-panel" aria-labelledby="tab-fun">
           <h2 style="margin:6px 0 12px">Fun & Engagement</h2>
           <div class="grid two">
@@ -480,14 +501,17 @@
     </div>
   </div>
 
-  <!-- ====== PDF LIBS ====== -->
+  <a class="home-fab" id="homeFab" href="index.html" title="Home (press H)" aria-label="Go to Home">
+    🏠 Home
+  </a>
+
+  <!-- PDF LIBS -->
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
   <script>pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";</script>
 
-  <!-- ====== APP LOGIC ====== -->
   <script>
-    // ---------- State for export/restore ----------
+    // ---------- State ----------
     const AppState = {
       macros:null,
       plan:null,
@@ -501,7 +525,7 @@
       challenge:null,
     };
 
-    // ---------- Top pill navigation ----------
+    // ---------- Nav ----------
     const bar = document.getElementById('utilBar');
     const panels = document.querySelectorAll('.section-panel');
     bar.addEventListener('click', e=>{
@@ -512,6 +536,31 @@
       b.scrollIntoView({inline:'nearest', behavior:'smooth', block:'nearest'});
     });
 
+    // ---------- Helpers ----------
+    function showErr(id, text){ const el=document.getElementById(id); el.style.display='block'; el.className='notice err'; el.textContent=text; }
+    function toast(text){
+      let n=document.querySelector('[data-toast]');
+      if(!n){
+        n=document.createElement('div'); n.setAttribute('data-toast',''); n.className='notice ok';
+        n.style.position='fixed'; n.style.top='14px'; n.style.left='50%'; n.style.transform='translateX(-50%)';
+        n.style.zIndex='9999'; n.style.maxWidth='92%'; n.style.boxShadow='0 12px 28px rgba(0,0,0,.35)'; document.body.appendChild(n);
+      }
+      n.textContent=text; n.style.display='block'; setTimeout(()=>{ n.style.display='none'; }, 2200);
+    }
+    function num(v){
+      if (v === null || v === undefined) return null;
+      const s = String(v).trim().replace(',', '.');
+      const n = parseFloat(s);
+      return Number.isFinite(n) ? n : null;
+    }
+    // Base64url <-> base64 utils
+    const toB64u = (s)=> btoa(encodeURIComponent(s)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+    const fromB64u = (u)=>{
+      let b64 = u.replace(/[^A-Za-z0-9\-_]/g,'').replace(/-/g,'+').replace(/_/g,'/');
+      while(b64.length % 4) b64 += '=';
+      return decodeURIComponent(atob(b64));
+    };
+
     // ---------- Macros / TDEE ----------
     const unitMetric = document.getElementById('unitMetric');
     const unitImperial = document.getElementById('unitImperial');
@@ -521,59 +570,55 @@
     unitMetric.onclick = ()=>{ usingMetric=true; unitMetric.classList.remove('btn-outline'); unitImperial.classList.add('btn-outline'); metricBox.style.display='block'; imperialBox.style.display='none'; };
     unitImperial.onclick = ()=>{ usingMetric=false; unitImperial.classList.remove('btn-outline'); unitMetric.classList.add('btn-outline'); metricBox.style.display='none'; imperialBox.style.display='block'; };
 
-    function num(v){ const n=parseFloat(v); return isNaN(n)?null:n; }
-
     document.getElementById('calcBtn').onclick = ()=>{
-      let kg, cm;
-      if(usingMetric){
-        kg = num(document.getElementById('mWeight').value);
-        cm = num(document.getElementById('mHeight').value);
-      }else{
-        const lb = num(document.getElementById('iWeight').value);
-        const ft = num(document.getElementById('iFt').value)||0;
-        const inch = num(document.getElementById('iIn').value)||0;
-        if(lb!=null) kg = lb * 0.45359237;
-        const totalIn = ft*12 + inch;
-        if(totalIn>0) cm = totalIn*2.54;
-      }
-      const age = num(document.getElementById('age').value);
-      const sex = document.getElementById('sex').value;
-      const activity = parseFloat(document.getElementById('activity').value||'1.55');
-      const goal = document.getElementById('goal').value;
-      const ppk = num(document.getElementById('proteinPerKg').value)||1.8;
+      try{
+        let kg, cm;
+        if(usingMetric){
+          kg = num(document.getElementById('mWeight').value);
+          cm = num(document.getElementById('mHeight').value);
+        }else{
+          const lb = num(document.getElementById('iWeight').value);
+          const ft = num(document.getElementById('iFt').value)||0;
+          const inch = num(document.getElementById('iIn').value)||0;
+          if(lb!=null) kg = lb * 0.45359237;
+          const totalIn = (ft||0)*12 + (inch||0);
+          if(totalIn>0) cm = totalIn*2.54;
+        }
+        const age = num(document.getElementById('age').value);
+        const sex = document.getElementById('sex').value;
+        const activity = parseFloat(document.getElementById('activity').value||'1.55');
+        const goal = document.getElementById('goal').value;
+        const ppk = num(document.getElementById('proteinPerKg').value)||1.8;
 
-      const out = document.getElementById('macroResult');
-      if(kg==null||cm==null||age==null){ out.style.display='block'; out.className='notice err'; out.textContent='Please fill weight, height, and age.'; return; }
+        const out = document.getElementById('macroResult');
+        if(kg==null||cm==null||age==null){ out.style.display='block'; out.className='notice err'; out.textContent='Please fill weight, height, and age.'; return; }
 
-      // BMR (Mifflin–St Jeor)
-      let BMR=10*kg + 6.25*cm - 5*age + (sex==='male'?5:-161);
-      let TDEE=BMR*activity;
+        const BMR = 10*kg + 6.25*cm - 5*age + (sex==='male'?5:-161);
+        const TDEE = BMR*activity;
+        const adjPct = (goal==='cut'?-20:goal==='bulk'?10:0);
+        const calories = Math.round(TDEE*(1+adjPct/100));
 
-      let adjPct = goal==='cut' ? -20 : goal==='bulk' ? +10 : 0;
-      const calories = Math.round(TDEE*(1+adjPct/100));
+        const proteinG = Math.round(ppk*kg);
+        const fatPct = goal==='cut'?0.25:0.30;
+        const fatCals = Math.round(calories*fatPct);
+        const fatG = Math.round(fatCals/9);
+        const protCals = proteinG*4;
+        const carbsG = Math.max(Math.round((calories-protCals-fatCals)/4),0);
 
-      const proteinG = Math.round(ppk*kg);
-      const fatPct = goal==='cut'?0.25:0.30;
-      const fatCals = Math.round(calories*fatPct);
-      const fatG = Math.round(fatCals/9);
-      const protCals = proteinG*4;
-      const carbsG = Math.max(Math.round((calories-protCals-fatCals)/4),0);
-
-      out.style.display='block'; out.className='notice ok';
-      out.innerHTML = `
-        <div style="display:flex;justify-content:space-between;"><strong>Calories</strong><span>${calories.toLocaleString()} kcal/day</span></div>
-        <hr style="border:0;border-top:1px solid ${getComputedStyle(document.body).getPropertyValue('--border')};margin:8px 0">
-        <div class="grid three">
-          <div><strong>Protein</strong><br>${proteinG} g</div>
-          <div><strong>Carbs</strong><br>${carbsG} g</div>
-          <div><strong>Fat</strong><br>${fatG} g</div>
-        </div>
-        <p class="small muted" style="margin:6px 0 0">Tip: keep protein steady; tweak carbs/fats ±10–15% as you track.</p>
-      `;
-
-      AppState.macros = { calories, proteinG, carbsG, fatG, kg, cm, age, sex, activity, goal, ppk };
+        out.style.display='block'; out.className='notice ok';
+        out.innerHTML = `
+          <div style="display:flex;justify-content:space-between;"><strong>Calories</strong><span>${calories.toLocaleString()} kcal/day</span></div>
+          <hr style="border:0;border-top:1px solid ${getComputedStyle(document.body).getPropertyValue('--border')};margin:8px 0">
+          <div class="grid three">
+            <div><strong>Protein</strong><br>${proteinG} g</div>
+            <div><strong>Carbs</strong><br>${carbsG} g</div>
+            <div><strong>Fat</strong><br>${fatG} g</div>
+          </div>
+          <p class="small muted" style="margin:6px 0 0">Tip: keep protein steady; tweak carbs/fats ±10–15%.</p>
+        `;
+        AppState.macros = { calories, proteinG, carbsG, fatG, kg, cm, age, sex, activity, goal, ppk };
+      }catch(err){ console.error(err); showErr('macroResult','Error while calculating.'); }
     };
-
     document.getElementById('addMacrosToSummary').onclick = ()=> toast('Macros added to PDF summary payload.');
 
     // ---------- Beginner Plan ----------
@@ -611,7 +656,7 @@
       const out = document.getElementById('planResult'); out.style.display='block'; out.className='notice ok'; out.innerHTML=html;
       AppState.plan = { split, schedule, note, goal };
     }
-    document.getElementById('planBtn').onclick = buildPlan;
+    document.getElementById('planBtn').onclick = ()=>{ try{ buildPlan(); }catch(e){ console.error(e); showErr('planResult','Could not build plan.'); } };
     document.getElementById('addPlanToSummary').onclick = ()=> toast('Plan added to PDF summary payload.');
 
     // ---------- Body Fat & Measurements ----------
@@ -625,8 +670,10 @@
       const sex = bfSex.value;
       const h = num(bfHeight.value), n=num(bfNeck.value), w=num(bfWaist.value), hip=num(bfHip.value), kg=num(bfWeight.value);
       if([h,n,w,kg].some(v=>v==null) || (sex==='female' && hip==null)){ showErr('bfResult','Please fill required fields.'); return null; }
-      // Convert to inches
       const hi = h/2.54, ni=n/2.54, wi=w/2.54, hpi=(hip||0)/2.54;
+      if(hi<=0 || wi<=0 || ni<=0 || (sex==='male' && wi-ni<=0) || (sex==='female' && wi+hpi-ni<=0)){
+        showErr('bfResult','Measurements look off. Check neck/waist/hip values.'); return null;
+      }
       let bfp;
       if(sex==='male'){
         bfp = 86.010*log10(wi - ni) - 70.041*log10(hi) + 36.76;
@@ -639,9 +686,8 @@
       AppState.latestBfp = { sex, h, n, w, hip:hip||null, kg, bfp: +bfp.toFixed(1) };
       return AppState.latestBfp;
     }
-    document.getElementById('bfCalc').onclick = estimateBfp;
+    document.getElementById('bfCalc').onclick = ()=>{ try{ estimateBfp(); }catch(e){ console.error(e); showErr('bfResult','Could not estimate body fat.'); } };
 
-    // Log table
     const tableBody = document.querySelector('#measureTable tbody');
     function renderLogs(){
       tableBody.innerHTML = '';
@@ -657,20 +703,22 @@
       const idx = +btn.dataset.del; AppState.measurements.splice(idx,1); renderLogs();
     };
     document.getElementById('addMeasurement').onclick = ()=>{
-      const latest = estimateBfp() || {};
-      const entry = {
-        date: new Date().toISOString().slice(0,10),
-        kg: num(bfWeight.value)??'-',
-        bfp: latest.bfp ?? null,
-        waist: num(bfWaist.value)??null,
-        neck: num(bfNeck.value)??null,
-        hip: (bfSex.value==='female'? num(bfHip.value): null)
-      };
-      AppState.measurements.push(entry); renderLogs(); toast('Measurement added.');
+      try{
+        const latest = estimateBfp() || {};
+        const entry = {
+          date: new Date().toISOString().slice(0,10),
+          kg: num(bfWeight.value)??'-',
+          bfp: latest?.bfp ?? null,
+          waist: num(bfWaist.value)??null,
+          neck: num(bfNeck.value)??null,
+          hip: (bfSex.value==='female'? num(bfHip.value): null)
+        };
+        AppState.measurements.push(entry); renderLogs(); toast('Measurement added.');
+      }catch(e){ console.error(e); toast('Could not add measurement.'); }
     };
     document.getElementById('addLogToSummary').onclick = ()=> toast('Log will be included in PDF.');
 
-    // ---------- Progression Planner ----------
+    // ---------- Progression ----------
     const progBody = document.querySelector('#progTable tbody');
     function buildProgression(){
       const exercise = document.getElementById('prExercise').value||'Exercise';
@@ -697,102 +745,108 @@
       AppState.progression = { exercise, rows };
       toast('Progression plan built.');
     }
-    document.getElementById('prBuild').onclick = buildProgression;
+    document.getElementById('prBuild').onclick = ()=>{ try{ buildProgression(); }catch(e){ console.error(e); toast('Could not build progression.'); } };
     document.getElementById('addProgToSummary').onclick = ()=> toast('Progression will be in PDF.');
 
-    // ---------- Nutrition Helpers ----------
+    // ---------- Nutrition ----------
     const nhBody = document.querySelector('#nhTable tbody');
     document.getElementById('nhBuild').onclick = ()=>{
-      const P=num(document.getElementById('nhP').value)||0;
-      const C=num(document.getElementById('nhC').value)||0;
-      const F=num(document.getElementById('nhF').value)||0;
-      const meals=Math.max(1, parseInt(document.getElementById('nhMeals').value||'4', 10));
-      let heavy = Math.min(meals, Math.max(1, parseInt(document.getElementById('nhHeavy').value||'2',10))) - 1;
+      try{
+        const P=num(document.getElementById('nhP').value)||0;
+        const C=num(document.getElementById('nhC').value)||0;
+        const F=num(document.getElementById('nhF').value)||0;
+        const meals=Math.max(1, parseInt(document.getElementById('nhMeals').value||'4', 10));
+        let heavy = Math.min(meals, Math.max(1, parseInt(document.getElementById('nhHeavy').value||'2',10))) - 1;
 
-      // equal weights, heavy meal gets +25%, then renormalize
-      let weights = Array(meals).fill(1);
-      weights[heavy] = 1.25;
-      const sumW = weights.reduce((a,b)=>a+b,0);
-      weights = weights.map(w=>w/sumW);
+        let weights = Array(meals).fill(1); weights[heavy] = 1.25;
+        const sumW = weights.reduce((a,b)=>a+b,0);
+        weights = weights.map(w=>w/sumW);
 
-      nhBody.innerHTML='';
-      const rows=[];
-      for(let i=0;i<meals;i++){
-        const pr = Math.round(P*weights[i]);
-        const cr = Math.round(C*weights[i]);
-        const fr = Math.round(F*weights[i]);
-        const cal = pr*4 + cr*4 + fr*9;
-        rows.push({ meal:i+1, pr, cr, fr, cal });
-        const tr=document.createElement('tr');
-        tr.innerHTML=`<td>Meal ${i+1}</td><td>${pr} g</td><td>${cr} g</td><td>${fr} g</td><td>${cal}</td>`;
-        nhBody.appendChild(tr);
-      }
-      AppState.meals = rows;
-      toast('Meal macro split created.');
+        nhBody.innerHTML='';
+        const rows=[];
+        for(let i=0;i<meals;i++){
+          const pr = Math.round(P*weights[i]);
+          const cr = Math.round(C*weights[i]);
+          const fr = Math.round(F*weights[i]);
+          const cal = pr*4 + cr*4 + fr*9;
+          rows.push({ meal:i+1, pr, cr, fr, cal });
+          const tr=document.createElement('tr');
+          tr.innerHTML=`<td>Meal ${i+1}</td><td>${pr} g</td><td>${cr} g</td><td>${fr} g</td><td>${cal}</td>`;
+          nhBody.appendChild(tr);
+        }
+        AppState.meals = rows;
+        toast('Meal macro split created.');
+      }catch(e){ console.error(e); toast('Could not build meal split.'); }
     };
     document.getElementById('addNutriToSummary').onclick = ()=> toast('Meal split will be in PDF.');
 
     // Hydration
     document.getElementById('hyCalc').onclick = ()=>{
-      const kg = num(document.getElementById('hyKg').value)||0;
-      const min = Math.max(0, num(document.getElementById('hyMin').value)||0);
-      const climate = document.getElementById('hyClimate').value;
-      let ml = kg*35 + (min/30)*500; // 35 ml/kg + 500 ml per 30 min
-      if(climate==='hot') ml *= 1.2;
-      const L = (ml/1000);
-      const out = document.getElementById('hyResult');
-      out.style.display='block'; out.className='notice ok';
-      out.innerHTML = `<strong>Suggested daily water:</strong> ${L.toFixed(2)} L <span class="muted">(${Math.round(ml)} ml)</span>`;
-      AppState.hydration = { kg, min, climate, liters:+L.toFixed(2) };
+      try{
+        const kg = num(document.getElementById('hyKg').value)||0;
+        const min = Math.max(0, num(document.getElementById('hyMin').value)||0);
+        const climate = document.getElementById('hyClimate').value;
+        let ml = kg*35 + (min/30)*500;
+        if(climate==='hot') ml *= 1.2;
+        const L = (ml/1000);
+        const out = document.getElementById('hyResult');
+        out.style.display='block'; out.className='notice ok';
+        out.innerHTML = `<strong>Suggested daily water:</strong> ${L.toFixed(2)} L <span class="muted">(${Math.round(ml)} ml)</span>`;
+        AppState.hydration = { kg, min, climate, liters:+L.toFixed(2) };
+      }catch(e){ console.error(e); showErr('hyResult','Could not estimate water intake.'); }
     };
 
     // ---------- Recovery ----------
-    // Sleep
     document.getElementById('slCalc').onclick = ()=>{
-      const t = document.getElementById('slWake').value || '07:00';
-      const cycles = Math.max(3, Math.min(7, parseInt(document.getElementById('slCycles').value||'5',10)));
-      const [hh,mm] = t.split(':').map(x=>parseInt(x,10));
-      const wake = new Date(); wake.setHours(hh, mm, 0, 0);
-      const minsBack = cycles*90 + 15; // fall asleep buffer
-      const bed = new Date(wake.getTime() - minsBack*60000);
-      const fmt = (d)=> `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-      const out = document.getElementById('slResult');
-      out.style.display='block'; out.className='notice ok';
-      out.innerHTML = `<strong>Go to bed around:</strong> ${fmt(bed)} <span class="muted">(for ${cycles} cycles)</span>`;
-      AppState.sleep = { wake:t, cycles, bedtime:fmt(bed) };
+      try{
+        const t = document.getElementById('slWake').value || '07:00';
+        const cycles = Math.max(3, Math.min(7, parseInt(document.getElementById('slCycles').value||'5',10)));
+        const [hh,mm] = t.split(':').map(x=>parseInt(x,10));
+        const wake = new Date(); wake.setHours(hh, mm, 0, 0);
+        const minsBack = cycles*90 + 15;
+        const bed = new Date(wake.getTime() - minsBack*60000);
+        const fmt = (d)=> `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+        const out = document.getElementById('slResult');
+        out.style.display='block'; out.className='notice ok';
+        out.innerHTML = `<strong>Go to bed around:</strong> ${fmt(bed)} <span class="muted">(for ${cycles} cycles)</span>`;
+        AppState.sleep = { wake:t, cycles, bedtime:fmt(bed) };
+      }catch(e){ console.error(e); showErr('slResult','Could not calculate bedtime.'); }
     };
-    // RPE
     document.getElementById('rpeCalc').onclick = ()=>{
-      const rpe = parseFloat(document.getElementById('rpe').value||'8.5');
-      const reps = Math.max(1, parseInt(document.getElementById('rpeReps').value||'5',10));
-      const oneRm = num(document.getElementById('rpeOneRm').value);
+      try{
+        const rpe = parseFloat(document.getElementById('rpe').value||'8.5');
+        const reps = Math.max(1, parseInt(document.getElementById('rpeReps').value||'5',10));
+        const oneRm = num(document.getElementById('rpeOneRm').value);
 
-      const base = {1:100,2:95,3:92,4:89,5:86,6:83,7:80,8:77,9:74,10:71};
-      const basePct = base[reps] || Math.max(40, 100 - 3*reps); // fallback
-      const rir = Math.max(0, 10 - rpe);
-      let pct = basePct - (rir*2.5);
-      pct = Math.max(40, Math.min(100, pct));
-      const load = oneRm? Math.round(oneRm*pct/100) : null;
+        const base = {1:100,2:95,3:92,4:89,5:86,6:83,7:80,8:77,9:74,10:71};
+        const basePct = base[reps] || Math.max(40, 100 - 3*reps);
+        const rir = Math.max(0, 10 - rpe);
+        let pct = basePct - (rir*2.5);
+        pct = Math.max(40, Math.min(100, pct));
+        const load = oneRm? Math.round(oneRm*pct/100) : null;
 
-      const out = document.getElementById('rpeResult');
-      out.style.display='block'; out.className='notice ok';
-      out.innerHTML = `<strong>~${pct.toFixed(1)}%</strong> of 1RM` + (load? ` → <strong>${load}</strong> (approx load)` : '');
-      AppState.rpe = { rpe, reps, pct:+pct.toFixed(1), oneRm:oneRm||null, load };
+        const out = document.getElementById('rpeResult');
+        out.style.display='block'; out.className='notice ok';
+        out.innerHTML = `<strong>~${pct.toFixed(1)}%</strong> of 1RM` + (load? ` → <strong>${load}</strong> (approx load)` : '');
+        AppState.rpe = { rpe, reps, pct:+pct.toFixed(1), oneRm:oneRm||null, load };
+      }catch(e){ console.error(e); showErr('rpeResult','Could not estimate % or load.'); }
     };
 
     // ---------- Fun ----------
     document.getElementById('stCalc').onclick = ()=>{
-      const d = document.getElementById('stDate').value;
-      const tgt = Math.max(1, Math.min(7, parseInt(document.getElementById('stTarget').value||'4',10)));
-      if(!d){ showErr('stResult','Pick a start date.'); return; }
-      const start = new Date(d+'T00:00:00');
-      const today = new Date();
-      const days = Math.floor((today - start)/86400000) + 1;
-      const weeks = Math.max(1, Math.floor(days/7));
-      const expected = weeks * tgt;
-      const out = document.getElementById('stResult'); out.style.display='block'; out.className='notice ok';
-      out.innerHTML = `<strong>${days}</strong> days since start • target <strong>${tgt}</strong>/wk → expected <strong>${expected}</strong> sessions`;
-      AppState.streak = { start:d, target:tgt, days, weeks, expected };
+      try{
+        const d = document.getElementById('stDate').value;
+        const tgt = Math.max(1, Math.min(7, parseInt(document.getElementById('stTarget').value||'4',10)));
+        if(!d){ showErr('stResult','Pick a start date.'); return; }
+        const start = new Date(d+'T00:00:00');
+        const today = new Date();
+        const days = Math.floor((today - start)/86400000) + 1;
+        const weeks = Math.max(1, Math.floor(days/7));
+        const expected = weeks * tgt;
+        const out = document.getElementById('stResult'); out.style.display='block'; out.className='notice ok';
+        out.innerHTML = `<strong>${days}</strong> days since start • target <strong>${tgt}</strong>/wk → expected <strong>${expected}</strong> sessions`;
+        AppState.streak = { start:d, target:tgt, days, weeks, expected };
+      }catch(e){ console.error(e); showErr('stResult','Could not calculate streak.'); }
     };
     const challenges = [
       "100 walking lunges today",
@@ -804,36 +858,37 @@
       "Try a new fruit/veg today + 2 extra glasses of water",
     ];
     document.getElementById('chSpin').onclick = ()=>{
-      const text = challenges[Math.floor(Math.random()*challenges.length)];
-      const out=document.getElementById('chResult'); out.style.display='block'; out.className='notice ok';
-      out.textContent = text; AppState.challenge = text;
+      try{
+        const text = challenges[Math.floor(Math.random()*challenges.length)];
+        const out=document.getElementById('chResult'); out.style.display='block'; out.className='notice ok';
+        out.textContent = text; AppState.challenge = text;
+      }catch(e){ console.error(e); showErr('chResult','Could not spin challenge.'); }
     };
-
-    // ---------- Shared helpers ----------
-    function showErr(id, text){ const el=document.getElementById(id); el.style.display='block'; el.className='notice err'; el.textContent=text; }
-    function toast(text){
-      // light inline toast using a transient notice at the top of the card
-      let n=document.querySelector('[data-toast]');
-      if(!n){ n=document.createElement('div'); n.setAttribute('data-toast',''); n.className='notice ok'; n.style.position='fixed'; n.style.top='14px'; n.style.left='50%'; n.style.transform='translateX(-50%)'; n.style.zIndex='9999'; n.style.maxWidth='92%'; n.style.boxShadow='0 12px 28px rgba(0,0,0,.35)'; document.body.appendChild(n); }
-      n.textContent=text; n.style.display='block'; setTimeout(()=>{ n.style.display='none'; }, 2200);
-    }
 
     // ---------- PDF EXPORT ----------
     document.getElementById('downloadPdfBtn').onclick = async ()=>{
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ unit:'pt', format:'a4' });
-      let y=60, line= (t, sz=12, bold=false)=>{ doc.setFont('helvetica', bold?'bold':'normal'); doc.setFontSize(sz); doc.text(t, 46, y); y+= sz+10; };
-      let hr=()=>{ doc.setDrawColor(224,33,33); doc.setLineWidth(1); doc.line(46,y,549,y); y+=14; };
+      const PAYLOAD_OPEN = 'PAYLOAD<<', PAYLOAD_CLOSE = '>>PAYLOAD';
 
-      // Header
+      let y=60;
+      const line= (t, sz=12, bold=false)=>{ doc.setFont('helvetica', bold?'bold':'normal'); doc.setFontSize(sz); doc.text(t, 46, y); y+= sz+10; };
+      const hr=()=>{ doc.setDrawColor(224,33,33); doc.setLineWidth(1); doc.line(46,y,549,y); y+=14; };
+
+      // Top bar + COMRADES (R/S red)
       doc.setFillColor(224,33,33); doc.rect(0,0,595,8,'F');
-      doc.setTextColor(20,20,20); doc.setFont('helvetica','bold'); doc.setFontSize(18);
-      doc.text('Gym Utilities — Snapshot', 46, 34);
+      const brandY = 34;
+      let x = 46;
+      doc.setFont('helvetica','bold'); doc.setFontSize(18);
+      const dark = [20,20,20], red = [224,33,33];
+      [{t:'COM',c:dark},{t:'R',c:red},{t:'ADE',c:dark},{t:'S',c:red}].forEach(p=>{ doc.setTextColor(...p.c); doc.text(p.t, x, brandY); x += doc.getTextWidth(p.t); });
       doc.setTextColor(50,50,50); doc.setFont('helvetica','normal'); doc.setFontSize(10);
-      doc.text(new Date().toLocaleString(), 460, 34);
+      doc.text(' • Gym Utilities — Snapshot', x+6, brandY);
+      doc.text(new Date().toLocaleString(), 460, brandY);
 
-      y=70;
-      if(AppState.macros){ hr(); doc.setTextColor(30,30,30); line('Macros & TDEE',14,true);
+      // Sections
+      y=70; doc.setTextColor(30,30,30);
+      if(AppState.macros){ hr(); line('Macros & TDEE',14,true);
         line(`Calories: ${AppState.macros.calories} kcal  •  P ${AppState.macros.proteinG}g  C ${AppState.macros.carbsG}g  F ${AppState.macros.fatG}g`,12); }
       if(AppState.plan){ hr(); line('Beginner Plan',14,true);
         line(AppState.plan.split,12);
@@ -852,34 +907,112 @@
       if(AppState.streak){ hr(); line('Streak',14,true); line(`${AppState.streak.days} days since ${AppState.streak.start}, target ${AppState.streak.target}/wk`,12); }
       if(AppState.challenge){ hr(); line('Challenge',14,true); line(AppState.challenge,12); }
 
-      // Embed data payload (base64) so we can restore later
-      const payload = btoa(unescape(encodeURIComponent(JSON.stringify(AppState))));
-      const footer = `DATA::${payload}`;
-      doc.setFont('courier','normal'); doc.setFontSize(8); doc.setTextColor(120,120,120);
-      doc.text(footer, 46, 820, { maxWidth: 503 });
+      // Embed base64url payload (PDF-safe), tiny and white
+      const payload = toB64u(JSON.stringify(AppState));
+      const hiddenTag = `${PAYLOAD_OPEN}${payload}${PAYLOAD_CLOSE}`;
+      doc.setFont('courier','normal'); doc.setFontSize(1); doc.setTextColor(255,255,255);
+      doc.text(hiddenTag, 2, 6);
 
-      doc.save('Gym_Utilities_Snapshot.pdf');
+      // Legacy visible footer (also base64url now)
+      doc.setFont('courier','normal'); doc.setFontSize(8); doc.setTextColor(120,120,120);
+      doc.text(`DATA::${payload}`, 46, 820, { maxWidth: 503 });
+
+      // Unique filename
+      const now = new Date();
+      const pad = n=>String(n).padStart(2,'0');
+      const fname = `Gym_Utilities_Snapshot_${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}.pdf`;
+
+      doc.save(fname);
       toast('PDF downloaded.');
     };
 
     // ---------- PDF RESTORE ----------
     document.getElementById('pdfUpload').addEventListener('change', async (e)=>{
       const file = e.target.files[0]; if(!file) return;
+      const PAYLOAD_OPEN = 'PAYLOAD<<', PAYLOAD_CLOSE = '>>PAYLOAD';
       try{
         const buf = await file.arrayBuffer();
         const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
-        let text=''; for(let i=1;i<=pdf.numPages;i++){ const p = await pdf.getPage(i); const c = await p.getTextContent(); text += c.items.map(it=>it.str).join('\n') + '\n'; }
-        const idx = text.lastIndexOf('DATA::');
-        if(idx<0){ toast('No embedded data found in PDF.'); return; }
-        const b64 = text.slice(idx+6).trim();
-        const json = JSON.parse(decodeURIComponent(escape(atob(b64))));
-        Object.assign(AppState, json || {});
+
+        let pagesText = [];
+        for(let i=1;i<=pdf.numPages;i++){
+          const p = await pdf.getPage(i);
+          // avoid combined glyphs which can scramble tokens
+          const c = await p.getTextContent({ normalizeWhitespace:true, disableCombineTextItems:true });
+          pagesText.push(c.items.map(it=>it.str).join(''));
+        }
+        const whole = pagesText.join('\n');
+        const first = pagesText[0]||'';
+
+        // Extract base64url payload
+        const tryExtract = (s)=>{
+          const m = s.match(/PAYLOAD<<([\s\S]*?)>>PAYLOAD/);
+          if(m){ return (m[1]||''); }
+          const m2 = s.match(/DATA::([A-Za-z0-9\-_]+)/); // base64url
+          if(m2){ return m2[1]; }
+          return null;
+        };
+
+        let b64u = tryExtract(first) || tryExtract(whole);
+        if(!b64u){ toast('No embedded data found in PDF.'); return; }
+
+        let jsonStr;
+        try{
+          jsonStr = fromB64u(b64u);
+        }catch(err){
+          // strip whitespace just in case and retry
+          b64u = (b64u||'').replace(/\s+/g,'');
+          jsonStr = fromB64u(b64u);
+        }
+        const parsed = JSON.parse(jsonStr);
+        coerceTypes(parsed);
+        Object.assign(AppState, parsed || {});
         repopulateFromState();
         toast('Restored from PDF.');
       }catch(err){ console.error(err); toast('Failed to read PDF.'); }
     });
 
-    // ---------- Repopulate UI from state ----------
+    // ---------- Type coercion to fix "strings as numbers" ----------
+    function coerceTypes(s){
+      if(!s || typeof s!=='object') return;
+      if(s.macros){
+        ['calories','proteinG','carbsG','fatG','kg','cm','age','activity','ppk']
+          .forEach(k=>{ if(s.macros[k]!=null) s.macros[k]=Number(s.macros[k]); });
+      }
+      if(s.latestBfp){
+        ['h','n','w','hip','kg','bfp'].forEach(k=>{ if(s.latestBfp[k]!=null) s.latestBfp[k]=Number(s.latestBfp[k]); });
+      }
+      if(Array.isArray(s.measurements)){
+        s.measurements = s.measurements.map(m=>({
+          ...m,
+          kg: m.kg!=null && m.kg!=='-' ? Number(m.kg) : m.kg,
+          bfp: m.bfp!=null ? Number(m.bfp) : m.bfp,
+          waist: m.waist!=null ? Number(m.waist) : m.waist,
+          neck: m.neck!=null ? Number(m.neck) : m.neck,
+          hip: m.hip!=null ? Number(m.hip) : m.hip,
+        }));
+      }
+      if(s.progression && Array.isArray(s.progression.rows)){
+        s.progression.rows = s.progression.rows.map(r=>({
+          ...r,
+          idx:Number(r.idx), week:Number(r.week), session:Number(r.session),
+          weight:Number(r.weight)
+        }));
+      }
+      if(Array.isArray(s.meals)){
+        s.meals = s.meals.map(m=>({ ...m, meal:Number(m.meal), pr:Number(m.pr), cr:Number(m.cr), fr:Number(m.fr), cal:Number(m.cal) }));
+      }
+      if(s.hydration && s.hydration.liters!=null){ s.hydration.liters = Number(s.hydration.liters); }
+      if(s.sleep && s.sleep.cycles!=null){ s.sleep.cycles = Number(s.sleep.cycles); }
+      if(s.rpe){
+        ['rpe','reps','pct','oneRm','load'].forEach(k=>{ if(s.rpe[k]!=null) s.rpe[k]=Number(s.rpe[k]); });
+      }
+      if(s.streak){
+        ['target','days','weeks','expected'].forEach(k=>{ if(s.streak[k]!=null) s.streak[k]=Number(s.streak[k]); });
+      }
+    }
+
+    // ---------- Repopulate UI ----------
     function repopulateFromState(){
       if(AppState.macros){
         const { calories, proteinG, carbsG, fatG } = AppState.macros;
@@ -915,7 +1048,7 @@
       }
       if(AppState.hydration){
         const out = document.getElementById('hyResult'); out.style.display='block'; out.className='notice ok';
-        out.innerHTML = `<strong>Suggested daily water:</strong> ${AppState.hydration.liters.toFixed(2)} L`;
+        out.innerHTML = `<strong>Suggested daily water:</strong> ${(+AppState.hydration.liters).toFixed(2)} L`;
       }
       if(AppState.sleep){
         const out = document.getElementById('slResult'); out.style.display='block'; out.className='notice ok';
