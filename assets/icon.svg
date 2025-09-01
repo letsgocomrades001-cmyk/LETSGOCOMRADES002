@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <style>
+      @media (prefers-color-scheme: dark) {  }
+      text { font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
+              font-weight: 800; }
+    </style>
+  </defs>
+  <rect width="512" height="512" fill="none"/>
+  <text x="50%" y="57%" text-anchor="middle" font-size="360" fill="#e02121">RS</text>
+</svg>
