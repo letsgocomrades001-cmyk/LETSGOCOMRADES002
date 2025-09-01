@@ -439,6 +439,23 @@
     .about .hi-card{ background:#fff; border:1px solid rgba(0,0,0,.06); border-radius:16px; padding:22px; box-shadow:0 16px 40px rgba(0,0,0,.2); }
     .about .hi-list i{ color:var(--accent); margin-right:10px; font-size:1.1rem; line-height:1.6; }
 
+
+/* === Revisit Progress (top bar) === */
+.revisit-progress-wrap{
+  position:fixed; top:0; left:0; right:0; height:4px; z-index:10050;
+  background:linear-gradient(90deg, rgba(255,255,255,.12), rgba(255,255,255,0));
+  transform:translateY(-8px); opacity:0; pointer-events:none;
+  transition:transform .22s ease, opacity .22s ease;
+}
+.revisit-progress-wrap.show{ transform:translateY(0); opacity:1; }
+.revisit-progress-bar{
+  width:0%; height:100%;
+  background:linear-gradient(90deg, var(--accent), #ff7b7b);
+  box-shadow:0 0 14px rgba(224,33,33,.45);
+  will-change: width;
+}
+
+
     /* Horizontal scroll for the schedule on small screens */
     .table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 14px; }
     @media (max-width: 992px) {
@@ -718,14 +735,21 @@
   </style>
 
 </head>
+
 <body data-spy="scroll" data-target="#navbarNav" data-offset="50">
+<!-- Revisit progress bar -->
+<div class="revisit-progress-wrap" id="revisitProgressWrap" aria-hidden="true">
+  <div class="revisit-progress-bar" id="revisitProgressBar"
+       role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+</div>
+
 
   <!-- FLOATING VIEW COUNTER (new) -->
- <!-- Views pill -->
-<div id="view-pill" class="view-pill" aria-live="polite" title="Unique page views">
-  <i class="fa fa-eye" aria-hidden="true"></i>
-  <span id="view-count">—</span>
-</div>
+  <!-- Views pill -->
+  <div id="view-pill" class="view-pill" aria-live="polite" title="Unique page views">
+    <i class="fa fa-eye" aria-hidden="true"></i>
+    <span id="view-count">—</span>
+  </div>
 
   <!-- MENU BAR -->
   <nav class="navbar navbar-expand-lg fixed-top">
@@ -1162,61 +1186,59 @@
   </section>
 
   <!-- FOOTER with flickering neon names -->
-<!-- SAMPLE HTML -->
-<footer class="credit-wrap">
-  <!-- Hidden toggle -->
-  <input type="checkbox" id="creditLight" class="sr-only" aria-hidden="true">
+  <footer class="credit-wrap">
+    <!-- Hidden toggle -->
+    <input type="checkbox" id="creditLight" class="sr-only" aria-hidden="true">
 
-  <!-- The lamp button -->
-  <label class="lamp" for="creditLight" aria-label="Turn light on to reveal creators">
-    <span class="lamp-bulb" aria-hidden="true"></span>
-    <span class="lamp-switch">Light</span>
-  </label>
+    <!-- The lamp button -->
+    <label class="lamp" for="creditLight" aria-label="Turn light on to reveal creators">
+      <span class="lamp-bulb" aria-hidden="true"></span>
+      <span class="lamp-switch">Light</span>
+    </label>
 
-  <!-- Names -->
-  <div class="credit-reveal" aria-live="polite">
-    <span class="by">by</span>
-    <span class="name">
-      <span class="initial">S</span>rikanth
-    </span>
-    <span class="and">&amp;</span>
-    <span class="name">
-      <span class="initial">R</span>ohith
-    </span>
-  </div>
-</footer>
-
-    <!-- year + split names into flickering chars -->
-    <script>
-      (function(){
-        var y = document.getElementById('year');
-        if (y) y.textContent = new Date().getFullYear();
-
-        // Split each name into spans with staggered delays
-        var names = document.querySelectorAll('footer .cn-name');
-        names.forEach(function(n){
-          var t = n.textContent.trim();
-          n.textContent = '';
-          Array.prototype.forEach.call(t, function(ch, i){
-            var s = document.createElement('span');
-            s.className = 'char';
-            s.style.setProperty('--i', i);
-            s.textContent = ch;
-            n.appendChild(s);
-          });
-        });
-
-        // Tap-to-flash on mobile
-        var pill = document.getElementById('creditNeon');
-        if (pill){
-          pill.addEventListener('click', function(){
-            pill.classList.add('flash');
-            setTimeout(function(){ pill.classList.remove('flash'); }, 500);
-          });
-        }
-      })();
-    </script>
+    <!-- Names -->
+    <div class="credit-reveal" aria-live="polite">
+      <span class="by">by</span>
+      <span class="name">
+        <span class="initial">S</span>rikanth
+      </span>
+      <span class="and">&amp;</span>
+      <span class="name">
+        <span class="initial">R</span>ohith
+      </span>
+    </div>
   </footer>
+
+  <!-- year + split names into flickering chars -->
+  <script>
+    (function(){
+      var y = document.getElementById('year');
+      if (y) y.textContent = new Date().getFullYear();
+
+      // Split each name into spans with staggered delays
+      var names = document.querySelectorAll('footer .cn-name');
+      names.forEach(function(n){
+        var t = n.textContent.trim();
+        n.textContent = '';
+        Array.prototype.forEach.call(t, function(ch, i){
+          var s = document.createElement('span');
+          s.className = 'char';
+          s.style.setProperty('--i', i);
+          s.textContent = ch;
+          n.appendChild(s);
+        });
+      });
+
+      // Tap-to-flash on mobile
+      var pill = document.getElementById('creditNeon');
+      if (pill){
+        pill.addEventListener('click', function(){
+          pill.classList.add('flash');
+          setTimeout(function(){ pill.classList.remove('flash'); }, 500);
+        });
+      }
+    })();
+  </script>
 
   <!-- Scroll to top -->
   <button id="to-top" aria-label="Back to top" title="Back to top"><i class="fa fa-arrow-up" aria-hidden="true"></i></button>
@@ -1824,68 +1846,217 @@
     })();
   </script>
 
-  <!-- ==== CounterAPI V2: index-only counter ==== -->
- <!-- Counter: CounterAPI v2 with CountAPI.xyz fallback -->
-<script type="module">
-  // ==== CONFIG (edit these 3 for CounterAPI v2) ====
-  const WORKSPACE = 'comrades';                 // your workspace slug
-  const COUNTER   = 'FitnessEnthusiasts';       // your counter slug
-  const TOKEN     = 'ut_DFPuGc2ZawbdnxmTspu1VZJ9hnR22iVkoAIjJueb'; // client-safe token
+  <!-- ==== Counter: CounterAPI (ESM) with CountAPI.xyz fallback ==== -->
+  <script type="module">
+    const WORKSPACE = 'Comrades';            // your CounterAPI workspace
+    const COUNTER   = 'FitnessEnthusiasts';  // your counter slug
 
-  const nEl  = document.getElementById('view-count');
-  const pill = document.getElementById('view-pill');
-  const path = location.pathname || '/';
-  const last = path.split('/').pop();
-  const hasExt = /\.[a-z0-9]+$/i.test(last);
-  const onIndex = (last === '' || /^index\.html?$/i.test(last) || !hasExt);
-  const ns = (location.hostname || 'local') + '_site_views'; // fallback namespace key
+    const nEl  = document.getElementById('view-count');
+    const pill = document.getElementById('view-pill');
 
-  function setCount(v){
-    if (!nEl) return;
-    nEl.textContent = Number(v ?? 0).toLocaleString();
-    if (pill){ pill.classList.add('glow'); setTimeout(()=>pill.classList.remove('glow'), 650); }
-  }
-
-  async function tryCounterApiV2(){
-    // Import the library dynamically so if it 404s we can still fall back.
-    const mod = await import('https://cdn.jsdelivr.net/npm/counterapi@latest/dist/index.esm.js');
-    const counter = new mod.Counter({ workspace: WORKSPACE, accessToken: TOKEN });
-
-    const res = onIndex ? await counter.up(COUNTER) : await counter.get(COUNTER);
-    setCount(res.value);
-
-    // After an increment, do a short refresh to defeat cache
-    if (onIndex) {
-      setTimeout(async () => {
-        try { const r2 = await counter.get(COUNTER); setCount(r2.value); } catch {}
-      }, 1200);
+    function isIndex() {
+      const path = location.pathname || '/';
+      const last = path.split('/').pop();
+      const hasExt = /\.[a-z0-9]+$/i.test(last);
+      return (last === '' || /^index\.html?$/i.test(last) || !hasExt);
     }
-  }
+    const onIndex = isIndex();
 
-  async function fallbackCountApiXyz(){
-    // namespace/key combo – persists globally without any token
-    const key = `${ns}`;
-    const base = 'https://api.countapi.xyz';
-    const url = onIndex
-      ? `${base}/hit/${encodeURIComponent(WORKSPACE)}/${encodeURIComponent(key)}`
-      : `${base}/get/${encodeURIComponent(WORKSPACE)}/${encodeURIComponent(key)}`;
-
-    const r = await fetch(url, { cache: 'no-store' });
-    if (!r.ok) throw new Error('fallback failed');
-    const j = await r.json();
-    setCount(j.value);
-  }
-
-  // Run: v2 → fallback
-  (async () => {
-    try {
-      await tryCounterApiV2();
-    } catch (e) {
-      console.warn('[counter] CounterAPI v2 failed, using fallback:', e);
-      try { await fallbackCountApiXyz(); }
-      catch(e2){ console.error('[counter] Fallback also failed:', e2); setCount(0); }
+    function setCount(v){
+      if (!nEl) return;
+      nEl.textContent = Number(v ?? 0).toLocaleString();
+      if (pill){ pill.classList.add('glow'); setTimeout(()=>pill.classList.remove('glow'), 650); }
     }
-  })();
+
+    async function useCounterApi(){
+      // Import the official ESM build from jsDelivr
+      const mod = await import('https://cdn.jsdelivr.net/npm/counterapi/dist/counter.esm.min.js');
+      const counter = new mod.Counter({ workspace: WORKSPACE });
+
+      const res = onIndex ? await counter.up(COUNTER) : await counter.get(COUNTER);
+      setCount(res.value);
+
+      // After an increment, refresh once to defeat caches/CDN delay
+      if (onIndex) {
+        setTimeout(async () => {
+          try { const r2 = await counter.get(COUNTER); setCount(r2.value); } catch {}
+        }, 1200);
+      }
+    }
+
+    async function fallbackCountApi(){
+      // Tokenless global fallback namespace per host
+      const ns = (location.hostname || 'local') + '_site_views';
+      const base = 'https://api.countapi.xyz';
+      const url = onIndex
+        ? `${base}/hit/${encodeURIComponent(WORKSPACE)}/${encodeURIComponent(ns)}`
+        : `${base}/get/${encodeURIComponent(WORKSPACE)}/${encodeURIComponent(ns)}`;
+
+      const r = await fetch(url, { cache: 'no-store' });
+      if (!r.ok) throw new Error('fallback failed');
+      const j = await r.json();
+      setCount(j.value);
+    }
+
+    (async () => {
+      try {
+        await useCounterApi();
+      } catch (e) {
+        console.warn('[counter] CounterAPI failed, using fallback:', e);
+        try { await fallbackCountApi(); }
+        catch(e2){ console.error('[counter] Fallback also failed:', e2); setCount(0); }
+      }
+    })();
+  </script>
+<!-- Restart meters (0 → 100%) on every scroll -->
+<script>
+(function () {
+  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const goals = [
+    { bar:'#bar-success',      pct:'#pct-success' },
+    { bar:'#bar-adherence',    pct:'#pct-adherence' },
+    { bar:'#bar-satisfaction', pct:'#pct-satisfaction' },
+  ];
+
+  const DURATION = reduceMotion ? 0 : 1200; // ms
+  let animFrame = null;
+  let scrollTimer = null;
+
+  function resetBarsTo0() {
+    goals.forEach(({bar}) => {
+      const el = document.querySelector(bar);
+      if (!el) return;
+      el.style.transition = 'none';
+      el.style.width = '0%';
+      // force reflow so the next transition applies
+      void el.offsetWidth;
+      if (!reduceMotion) el.style.transition = 'width '+ DURATION +'ms cubic-bezier(.2,.8,.2,1)';
+    });
+    goals.forEach(({pct}) => {
+      const pctEl = document.querySelector(pct);
+      if (pctEl) pctEl.textContent = '0%';
+    });
+  }
+
+  function animateTo100() {
+    const t0 = performance.now();
+
+    // Kick off the width transition
+    goals.forEach(({bar}) => {
+      const el = document.querySelector(bar);
+      if (el) el.style.width = '100%';
+    });
+
+    function tick(now) {
+      const p = DURATION ? Math.min((now - t0) / DURATION, 1) : 1;
+      const val = Math.round(100 * p);
+      goals.forEach(({pct}) => {
+        const pctEl = document.querySelector(pct);
+        if (pctEl) pctEl.textContent = val + '%';
+      });
+      if (p < 1) animFrame = requestAnimationFrame(tick);
+    }
+    animFrame = requestAnimationFrame(tick);
+  }
+
+  function startAnimationCycle() {
+    if (animFrame) cancelAnimationFrame(animFrame);
+    resetBarsTo0();
+    // Allow the browser a tick to apply width:0 before transitioning to 100
+    setTimeout(animateTo100, reduceMotion ? 0 : 40);
+  }
+
+  // Run once on load
+  startAnimationCycle();
+
+  // Restart once per scroll gesture (debounced)
+  window.addEventListener('scroll', () => {
+    if (scrollTimer) clearTimeout(scrollTimer);
+    scrollTimer = setTimeout(startAnimationCycle, 120);
+  }, { passive: true });
+
+  // Optional: also restart on keyboard scroll/navigation
+  window.addEventListener('keydown', (e) => {
+    if (['PageDown','PageUp','Home','End','ArrowDown','ArrowUp',' '].includes(e.key)) {
+      startAnimationCycle();
+    }
+  });
+})();
+</script>
+
+<script>
+(function(){
+  const about = document.getElementById('about');
+  const wrap  = document.getElementById('revisitProgressWrap');
+  const bar   = document.getElementById('revisitProgressBar');
+
+  if (!about || !wrap || !bar) return;
+
+  let hasEnteredOnce = false;  // set after first time About is seen
+  let leftAfterFirst = false;  // becomes true once user leaves About after first entry
+  let inView         = false;  // current visibility
+  let animating      = false;  // avoid overlapping animations
+
+  function animateProgress(){
+    if (animating) return;
+    animating = true;
+
+    // reset
+    wrap.classList.add('show');
+    bar.style.transition = 'none';
+    bar.style.width = '0%';
+    bar.setAttribute('aria-valuenow', '0');
+    void bar.offsetWidth; // reflow
+
+    // run
+    const DURATION = 1200; // ms
+    bar.style.transition = `width ${DURATION}ms ease`;
+    bar.style.width = '100%';
+
+    // keep aria-valuenow updated
+    const start = performance.now();
+    function tick(now){
+      const t = Math.min(1, (now - start) / DURATION);
+      bar.setAttribute('aria-valuenow', String(Math.round(t * 100)));
+      if (t < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+
+    bar.addEventListener('transitionend', () => {
+      setTimeout(() => {
+        wrap.classList.remove('show');
+        bar.style.transition = 'none';
+        animating = false;
+      }, 300);
+    }, { once: true });
+  }
+
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      if (e.target !== about) continue;
+
+      if (e.isIntersecting) {
+        // entered About
+        if (!hasEnteredOnce) {
+          hasEnteredOnce = true;           // first time; do NOT animate
+        } else if (leftAfterFirst) {
+          animateProgress();               // revisited; animate
+          leftAfterFirst = false;
+        }
+        inView = true;
+      } else {
+        // left About
+        if (hasEnteredOnce && inView) {
+          leftAfterFirst = true;           // mark that we left after the first visit
+        }
+        inView = false;
+      }
+    }
+  }, { threshold: 0.35 }); // ~35% visible counts as "in view"
+
+  io.observe(about);
+})();
 </script>
 
 
