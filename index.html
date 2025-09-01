@@ -73,6 +73,199 @@
       transition:opacity .25s, transform .25s, box-shadow .25s;
     }
 
+    /* ======== VIEW COUNTER PILL (new) ======== */
+    #view-pill{
+      position:fixed; top:76px; right:14px; z-index:10010;
+      display:inline-flex; align-items:center; gap:10px;
+      padding:8px 12px; border-radius:999px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(224,33,33,.35);
+      color:#fff; font-weight:800; letter-spacing:.2px;
+      backdrop-filter: blur(12px) saturate(160%);
+      -webkit-backdrop-filter: blur(12px) saturate(160%);
+      box-shadow:0 14px 34px rgba(224,33,33,.12), inset 0 1px 0 rgba(255,255,255,.08);
+      transition: transform .2s ease, box-shadow .3s ease, border-color .2s ease;
+    }
+    #view-pill:hover{
+      transform: translateY(-2px);
+      border-color: rgba(224,33,33,.6);
+      box-shadow:0 18px 44px rgba(224,33,33,.2), inset 0 1px 0 rgba(255,255,255,.1);
+    }
+    #view-pill .dot{
+      width:8px; height:8px; border-radius:50%;
+      background:var(--accent);
+      box-shadow:0 0 12px rgba(224,33,33,.9);
+      animation: led 1.6s ease-in-out infinite;
+      flex:0 0 8px;
+    }
+    #view-pill .label{ opacity:.9; font-weight:700; }
+    #view-pill .count{ font-variant-numeric: tabular-nums; }
+
+    #view-pill.glow{
+      box-shadow:0 22px 52px rgba(224,33,33,.28), inset 0 1px 0 rgba(255,255,255,.1);
+    }
+
+    @media (max-width: 480px){
+      #view-pill{ top:72px; right:8px; padding:6px 10px; gap:8px; }
+    }
+
+    /* SAMPLE CSS */
+:root{
+  --accent:#e02121;
+  --ink:#eaeaea;
+  --bg:#0b0b0b;
+}
+
+/* layout */
+.credit-wrap{
+  position:relative;
+  display:flex; align-items:center; gap:14px;
+  padding:14px 18px;
+  border-radius:16px;
+  background:linear-gradient(180deg,#101010,#0a0a0a);
+  border:1px solid rgba(255,255,255,.08);
+  overflow:hidden;
+  isolation:isolate;
+}
+
+/* subtle grid + animated light cone */
+.credit-wrap::before{
+  content:""; position:absolute; inset:-2px; z-index:0;
+  background:
+    radial-gradient(160px 160px at 52px 50%, rgba(255,255,255,.04), rgba(255,255,255,0) 60%),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.03) 0 1px, transparent 1px 16px),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.03) 0 1px, transparent 1px 16px);
+  transition: .4s ease;
+  opacity:.35;
+}
+#creditLight:checked ~ .credit-reveal,
+#creditLight:checked + .lamp + .credit-reveal{} /* for Safari ordering quirk */
+#creditLight:checked ~ .credit-reveal{} /* keep */
+
+#creditLight:checked ~ .credit-reveal,
+#creditLight:checked + .lamp + .credit-reveal{} /* no-op, just keeping order */
+
+/* The lamp control */
+.sr-only{ position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
+.lamp{
+  position:relative; z-index:2;
+  display:inline-flex; align-items:center; gap:10px;
+  padding:8px 12px; border-radius:999px; cursor:pointer; user-select:none;
+  background:#0f0f0f; color:#bbb; border:1px solid rgba(255,255,255,.12);
+  transition: transform .2s ease, box-shadow .25s ease, background .25s ease;
+}
+.lamp:hover{ transform:translateY(-1px); }
+.lamp-bulb{
+  width:14px; height:14px; border-radius:50%;
+  background:#2b2b2b; box-shadow: inset 0 0 6px #000;
+  border:1px solid #1e1e1e;
+  transition: .25s ease;
+}
+.lamp-switch{ font-weight:700; letter-spacing:.2px; font-size:12px; }
+
+/* Names area (starts dim/hidden) */
+.credit-reveal{
+  position:relative; z-index:1;
+  display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;
+  color:var(--ink);
+  filter:saturate(.2) brightness(.6);
+  transition: filter .35s ease, opacity .35s ease;
+}
+.by{ opacity:.5; text-transform:lowercase; letter-spacing:.3px; }
+.name{
+  font-weight:800; letter-spacing:.2px;
+  opacity:0; transform: translateY(6px);
+  filter: blur(6px);
+  transition: opacity .5s ease, transform .5s ease, filter .5s ease;
+}
+.and{ opacity:0; transform: translateY(6px); transition:.5s ease; }
+
+/* Initial letters: always red when revealed + neon flicker */
+.initial{
+  color:var(--accent);
+  text-shadow:none;
+}
+
+/* Light ON state */
+#creditLight:checked ~ .credit-reveal{
+  filter:saturate(1) brightness(1);
+}
+#creditLight:checked ~ .credit-reveal .name{
+  opacity:1; transform:none; filter:blur(0);
+}
+#creditLight:checked ~ .credit-reveal .and{
+  opacity:.8; transform:none;
+}
+
+/* stagger the two names a touch */
+#creditLight:checked ~ .credit-reveal .name:nth-of-type(2){ transition-delay:.05s; }
+#creditLight:checked ~ .credit-reveal .and{ transition-delay:.03s; }
+
+/* Lamp turns “on” */
+#creditLight:checked + .lamp .lamp-bulb{
+  background: var(--accent);
+  box-shadow:
+    0 0 10px rgba(224,33,33,.9),
+    0 0 22px rgba(224,33,33,.5),
+    inset 0 0 6px rgba(255,255,255,.6);
+  border-color: rgba(224,33,33,.6);
+}
+#creditLight:checked + .lamp{
+  background: rgba(224,33,33,.1);
+  color:#fff; border-color: rgba(224,33,33,.35);
+  box-shadow: 0 10px 26px rgba(224,33,33,.18), inset 0 1px 0 rgba(255,255,255,.08);
+}
+
+/* Brighten the light cone + soft sweep */
+#creditLight:checked ~ .credit-reveal::before,
+#creditLight:checked ~ .credit-reveal::after{} /* keep specificity balance */
+
+#creditLight:checked ~ .credit-reveal{} /* noop */
+
+#creditLight:checked ~ .credit-reveal + * {} /* noop */
+
+/* brighten the panel grid cone */
+#creditLight:checked ~ .credit-reveal,
+#creditLight:checked + .lamp + .credit-reveal{}
+.credit-wrap:has(#creditLight:checked)::before{
+  opacity:1;
+  background:
+    radial-gradient(240px 220px at 52px 50%, rgba(255,255,255,.16), rgba(255,255,255,0) 60%),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.04) 0 1px, transparent 1px 16px),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.04) 0 1px, transparent 1px 16px);
+  animation: conePulse 2.2s ease-in-out 1;
+}
+
+@keyframes conePulse{
+  0%   { opacity:.2; filter:brightness(.9); }
+  40%  { opacity:1;   filter:brightness(1.08); }
+  100% { opacity:.95; filter:brightness(1); }
+}
+
+/* Neon flicker (runs only when light is on) */
+#creditLight:checked ~ .credit-reveal .initial{
+  animation: neonFlickerRed 2.6s ease-in-out infinite;
+  text-shadow:
+    0 0 8px rgba(224,33,33,.75),
+    0 0 18px rgba(224,33,33,.45);
+}
+@keyframes neonFlickerRed{
+  0%, 12%  { opacity:1;   text-shadow: 0 0 8px rgba(224,33,33,.7), 0 0 18px rgba(224,33,33,.45); }
+  13%      { opacity:.3;  text-shadow:none; }
+  16%      { opacity:1;   text-shadow: 0 0 10px rgba(224,33,33,.9), 0 0 24px rgba(224,33,33,.55); }
+  22%      { opacity:.7;  text-shadow: 0 0 6px rgba(224,33,33,.5); }
+  55%      { opacity:1;   text-shadow: 0 0 12px rgba(224,33,33,.95), 0 0 28px rgba(224,33,33,.6); }
+  72%      { opacity:.85; text-shadow: 0 0 9px rgba(224,33,33,.8), 0 0 20px rgba(224,33,33,.5); }
+  100%     { opacity:1;   text-shadow: 0 0 10px rgba(224,33,33,.85), 0 0 24px rgba(224,33,33,.55); }
+}
+
+/* Reduced motion respect */
+@media (prefers-reduced-motion: reduce){
+  .lamp, .credit-reveal, .credit-wrap::before,
+  .initial{ animation:none !important; transition:none !important; }
+}
+
+
     /* Neon pulse */
     .rs.neon{ animation: neonText 2.6s ease-in-out infinite; }
     .rs.neon::after{ animation: neonBox 2.6s ease-in-out infinite; }
@@ -191,13 +384,36 @@
       .flip-chip .list > div:hover,
       .flip-chip .list > div:focus{
         background: rgba(255,255,255,.10);
-        border-color: rgba(255,255,255,.18);
+        border-color: rgba(224,33,33,.18);
         box-shadow: 0 10px 26px rgba(0,0,0,.26),
                     inset 0 1px 0 rgba(255,255,255,.12);
       }
     }
 
     .flip-chip .list > div::after{ display:none !important; }
+
+/* Make the first letter of each credit name (S & R) red with a red flicker */
+.cn-name .char:first-child{
+  color: var(--accent);
+  /* keep timing & delay from the base rule, just swap animation name */
+  animation-name: neonFlickerRed;
+  text-shadow:
+    0 0 8px rgba(224,33,33,.75),
+    0 0 18px rgba(224,33,33,.45);
+}
+
+@keyframes neonFlickerRed{
+  0%   { color: var(--accent); text-shadow: none; opacity:.95; }
+  3%   { color: var(--accent); text-shadow: 0 0 8px rgba(224,33,33,.8), 0 0 18px rgba(224,33,33,.45); }
+  6%   { color: var(--accent); text-shadow: none; }
+  8%   { color: var(--accent); text-shadow: 0 0 10px rgba(224,33,33,.9), 0 0 24px rgba(224,33,33,.55); }
+  12%  { color: var(--accent); text-shadow: none; }
+  35%  { color: var(--accent); text-shadow: 0 0 12px rgba(224,33,33,.95), 0 0 28px rgba(224,33,33,.6); }
+  50%  { color: var(--accent); text-shadow: none; }
+  75%  { color: var(--accent); text-shadow: 0 0 10px rgba(224,33,33,.85), 0 0 24px rgba(224,33,33,.5); }
+  100% { color: var(--accent); text-shadow: none; }
+}
+
 
     /* ===== Feature card ===== */
     .about-working-hours{
@@ -222,6 +438,15 @@
     #about .col-lg-6 > h2 span{ color:#e02121 !important; }
     .about .hi-card{ background:#fff; border:1px solid rgba(0,0,0,.06); border-radius:16px; padding:22px; box-shadow:0 16px 40px rgba(0,0,0,.2); }
     .about .hi-list i{ color:var(--accent); margin-right:10px; font-size:1.1rem; line-height:1.6; }
+
+    /* Horizontal scroll for the schedule on small screens */
+    .table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 14px; }
+    @media (max-width: 992px) {
+      .schedule-table { min-width: 760px; }
+      .schedule-table th, .schedule-table td { white-space: nowrap; }
+    }
+    .table-scroll::-webkit-scrollbar { height: 8px; }
+    .table-scroll::-webkit-scrollbar-thumb { background: rgba(224,33,33,.4); border-radius: 999px; }
 
     /* Meters */
     .stat .row + .row{ margin-top:12px; }
@@ -334,7 +559,7 @@
       margin:8px 0;
       padding:10px 12px;
       background:
-        linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02)),
+        linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,0)),
         radial-gradient(120% 120% at -20% -20%, rgba(224,33,33,.06), transparent 60%);
       border:1px solid rgba(224,33,33,.28);
       box-shadow:0 10px 28px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.06);
@@ -413,11 +638,94 @@
       font-size: inherit; font-weight: 800;
     }
     @keyframes blink { 50% { opacity: 0; } }
-  </style>
 
+
+    /* =========================
+       FLICKERING NEON CREDITS
+       ========================= */
+    .credit-wrap{ display:flex; align-items:center; justify-content:center; width:100%; order:2; }
+    @media (min-width: 992px){ .credit-wrap{ order:2; } }
+
+    .credit-neon{
+      position:relative; display:inline-flex; align-items:center; gap:10px;
+      padding:10px 16px; border-radius:999px; overflow:hidden; isolation:isolate;
+      background:linear-gradient(180deg,#101010,#0b0b0b);
+      border:1px solid rgba(224,33,33,.35);
+      box-shadow:
+        0 14px 34px rgba(224,33,33,.12),
+        inset 0 1px 0 rgba(255,255,255,.06);
+      color:#eaeaea; font-weight:700; letter-spacing:.2px;
+      cursor:pointer; user-select:none;
+      transition: transform .2s ease, box-shadow .3s ease, border-color .2s ease;
+    }
+    .credit-neon:hover{ transform: translateY(-2px); border-color: rgba(224,33,33,.6); box-shadow:0 18px 44px rgba(224,33,33,.2), inset 0 1px 0 rgba(255,255,255,.08); }
+
+    .cn-led{
+      width:8px; height:8px; border-radius:50%;
+      background:var(--accent); filter:blur(.2px);
+      box-shadow:0 0 12px rgba(224,33,33,.9);
+      animation: cnLed 1.6s ease-in-out infinite;
+      flex:0 0 8px;
+    }
+    @keyframes cnLed{ 0%,100%{opacity:.25} 50%{opacity:.95} }
+
+    .cn-text{ color:#eaeaea; }
+    .cn-name{ font-weight:900; letter-spacing:.3px; }
+    .cn-name .char{
+      display:inline-block; position:relative;
+      text-shadow:
+        0 0 0 rgba(224,33,33,0),
+        0 0 0 rgba(224,33,33,0);
+      animation: neonFlicker 3.2s infinite steps(1,end);
+      animation-delay: calc(var(--i) * 70ms);
+    }
+
+    @keyframes neonFlicker{
+      0%   { color:#fff; text-shadow: 0 0 0 rgba(224,33,33,0); opacity:.88; }
+      3%   { color:#ffecec; text-shadow: 0 0 6px rgba(224,33,33,.7), 0 0 14px rgba(224,33,33,.35); }
+      6%   { color:#fff; text-shadow: 0 0 0 rgba(224,33,33,0); }
+      7%   { color:#ffdede; text-shadow: 0 0 10px rgba(224,33,33,.8), 0 0 22px rgba(224,33,33,.45); }
+      9%   { color:#fff; text-shadow: 0 0 0 rgba(224,33,33,0); }
+      35%  { color:#ffdede; text-shadow: 0 0 12px rgba(224,33,33,.85), 0 0 26px rgba(224,33,33,.5); }
+      50%  { color:#fff; text-shadow: 0 0 0 rgba(224,33,33,0); }
+      75%  { color:#ffecec; text-shadow: 0 0 10px rgba(224,33,33,.8), 0 0 22px rgba(224,33,33,.45); }
+      100% { color:#fff; text-shadow: 0 0 0 rgba(224,33,33,0); }
+    }
+
+    /* sweep line (extra flair) */
+    .chip-scan{
+      position:absolute; inset:0; pointer-events:none; opacity:0;
+      background:linear-gradient(120deg, transparent 45%, rgba(255,255,255,.55) 50%, transparent 55%);
+      transform:translateX(-130%);
+    }
+    .credit-neon:hover .chip-scan{ opacity:.35; animation: chipSweep 700ms ease-out both; }
+    @keyframes chipSweep{ from{ transform:translateX(-130%);} to{ transform:translateX(130%);} }
+
+    /* tap flash */
+    .credit-neon.flash .cn-name .char{
+      animation: neonFlash 0.5s ease-in-out 1;
+    }
+    @keyframes neonFlash{
+      0%{ text-shadow: 0 0 0 rgba(224,33,33,0); }
+      50%{ text-shadow: 0 0 14px rgba(224,33,33,.95), 0 0 28px rgba(224,33,33,.55); color:#ffdede; }
+      100%{ text-shadow: 0 0 0 rgba(224,33,33,0); }
+    }
+
+    /* Respect reduced motion */
+    @media (prefers-reduced-motion: reduce){
+      .credit-neon, .cn-led, .cn-name .char, .chip-scan{ animation:none !important; transform:none !important; text-shadow:none !important; }
+    }
+  </style>
 
 </head>
 <body data-spy="scroll" data-target="#navbarNav" data-offset="50">
+
+  <!-- FLOATING VIEW COUNTER (new) -->
+ <!-- Views pill -->
+<div id="view-pill" class="view-pill" aria-live="polite" title="Unique page views">
+  <i class="fa fa-eye" aria-hidden="true"></i>
+  <span id="view-count">—</span>
+</div>
 
   <!-- MENU BAR -->
   <nav class="navbar navbar-expand-lg fixed-top">
@@ -451,7 +759,6 @@
     </div>
   </nav>
 
-
   <!-- HERO -->
   <section class="hero d-flex flex-column justify-content-center align-items-center" id="home">
     <div class="bg-overlay"></div>
@@ -460,14 +767,12 @@
 
         <div class="col-lg-8 col-md-10 mx-auto col-12">
           <div class="hero-text mt-5 text-center">
-
-            <!-- Multilingual typewriter (Telugu → backspace → Hindi → backspace → English → backspace) -->
+            <!-- Multilingual typewriter -->
             <h6 data-aos="fade-up" data-aos-delay="300">
               <span id="type-cycle" class="typing-line"></span>
               <span class="cursor-mini" aria-hidden="true">|</span>
             </h6>
 
-            <!-- Replaced nested H1 + typed block with flip chip -->
             <h1 class="text-white" data-aos="fade-up" data-aos-delay="500">
               Upgrade your body like
               <span class="flip-line">
@@ -475,7 +780,6 @@
                   <span class="list" aria-hidden="true">
                     <div>SALAAR</div>
                     <div>SARKAAR</div>
-                    <!-- duplicate first item for seamless loop -->
                     <div>SALAAR</div>
                   </span>
                 </span>
@@ -484,7 +788,6 @@
 
             <a href="#feature" class="btn custom-btn mt-3" data-aos="fade-up" data-aos-delay="600">Get started</a>
             <a href="#about" class="btn custom-btn bordered mt-3" data-aos="fade-up" data-aos-delay="700">learn more</a>
-
           </div>
         </div>
 
@@ -492,7 +795,7 @@
     </div>
   </section>
 
-
+  <!-- FEATURE -->
   <section class="feature" id="feature">
     <div class="container">
       <div class="row">
@@ -525,7 +828,6 @@
       </div>
     </div>
   </section>
-
 
   <!-- ABOUT -->
   <section class="about section" id="about">
@@ -626,7 +928,6 @@
     </div>
   </section>
 
-
   <!-- CLASS (NO IMAGES) -->
   <section class="class section" id="class">
     <div class="container">
@@ -645,18 +946,15 @@
             <div class="fx-top">
               <span class="fx-badge">Programs</span>
               <div class="fx-icon" aria-hidden="true">
-                <!-- Dumbbell icon -->
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M4 14v-4M7 17v-10M17 17v-10M20 14v-4"/>
                   <rect x="9" y="10.5" width="6" height="3" rx="1.5"/>
                 </svg>
               </div>
             </div>
-
             <div class="fx-num">01</div>
             <h3 class="fx-title">Workout Types</h3>
             <p class="fx-sub">Clear splits with progressions and smart swaps for limited equipment.</p>
-
             <ul class="fx-list">
               <li>
                 <svg class="fx-ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20.3 5.7a1 1 0 0 1 0 1.4l-9.6 9.6a1 1 0 0 1-1.4 0L3.7 11a1 1 0 1 1 1.4-1.4l4.2 4.2 8.9-8.9a1 1 0 0 1 1.4 0z"/></svg>
@@ -671,7 +969,6 @@
                 Beginner → Advanced paths
               </li>
             </ul>
-
             <div class="beam"></div>
             <div class="fx-actions">
               <a class="btn-solid" href="WorkoutSplits.html" target="_blank" rel="noopener">Open Workouts</a>
@@ -687,7 +984,6 @@
             <div class="fx-top">
               <span class="fx-badge">Nutrition</span>
               <div class="fx-icon" aria-hidden="true">
-                <!-- Apple icon -->
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M16.5 2c-1.8 0-3 .9-3.8 2.2-.9 1.3-.9 2.9 0 4.2 1.2 0 2.5-.5 3.4-1.4S17.7 4.4 17.7 3.2c-.3-.7-.6-1.2-1.2-1.2z"/>
                   <path d="M12.2 7.5c-1.2-.7-2.7-.9-4-.5-2.4.6-4.3 2.8-4.6 5.4-.3 2.6 1.1 5.1 3.5 6.2 1.1.5 2.3.6 3.4.4 1.1-.2 2.1-.8 2.9-1.6.8.8 1.8 1.4 2.9 1.6 1.1.2 2.3.1 3.4-.4 2.4-1.1 3.8-3.6 3.5-6.2-.3-2.6-2.2-4.8-4.6-5.4-1.3-.3-2.8-.2-4 .5"/>
@@ -711,7 +1007,7 @@
             <div class="beam"></div>
             <div class="fx-actions">
               <a class="btn-solid" href="foodAndNutrition.html" target="_blank" rel="noopener">Open Nutrition</a>
-              <a class="btn-ghost" href="#contact" target="_blank">Food and Facts</a>
+              <a class="btn-ghost" href="foodAndNutrition.html" target="_blank">Food and Facts</a>
             </div>
           </div>
         </article>
@@ -723,7 +1019,6 @@
             <div class="fx-top">
               <span class="fx-badge">Tools</span>
               <div class="fx-icon" aria-hidden="true">
-                <!-- Sliders icon -->
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <line x1="4" y1="6" x2="20" y2="6"/>
                   <line x1="4" y1="12" x2="20" y2="12"/>
@@ -759,47 +1054,49 @@
     </div>
   </section>
 
-
   <!-- SCHEDULE -->
   <section class="schedule section" id="schedule">
     <div class="container">
       <div class="row">
 
         <div class="col-lg-12 col-12 text-center">
-          <h6 data-aos="fade-up" class="text-light">our weekly GYM schedules</h6>
+          <h6 data-aos="fade-up" class="text-light">Ideal weekly GYM schedules</h6>
           <h2 class="text-white" data-aos="fade-up" data-aos-delay="200">Workout Timetable</h2>
         </div>
 
         <div class="col-lg-12 py-5 col-md-12 col-12">
-          <table class="table table-bordered table-responsive schedule-table" data-aos="fade-up" data-aos-delay="300">
-            <thead class="thead-light">
-              <th><i class="fa fa-calendar"></i></th>
-              <th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th>
-            </thead>
-            <tbody>
-              <tr>
-                <td><a href="WorkoutSplits.html" target="_blank"><strong>Total Body Splits</strong></a></td>
-                <td><span>Full Body</span></td><td><span>Rest</span></td><td><span>Full Body</span></td>
-                <td><span>Rest</span></td><td><span>Full Body</span></td><td><span>Rest</span></td>
-              </tr>
-              <tr>
-                <td><a href="WorkoutSplits.html" target="_blank"><strong>Upper/Lower Splits</strong></a></td>
-                <td><span>Upper Body</span></td><td><span>Lower Body</span></td><td><span>Rest</span></td>
-                <td><span>Upper Body</span></td><td><span>Lower Body</span></td><td><span>Rest</span></td>
-              </tr>
-              <tr>
-                <td><a href="WorkoutSplits.html" target="_blank"><strong>Push-Pull-Legs</strong></a></td>
-                <td><span>Push</span></td><td><span>Pull</span></td><td><span>Legs</span></td>
-                <td><span>Push</span></td><td><span>Pull</span></td><td><span>Legs</span></td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="table-scroll" role="region" aria-label="Weekly workout timetable">
+            <table class="table table-bordered schedule-table" data-aos="fade-up" data-aos-delay="300">
+              <thead class="thead-light">
+                <tr>
+                  <th><i class="fa fa-calendar"></i></th>
+                  <th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><a href="WorkoutSplits.html" target="_blank"><strong>Total Body Splits</strong></a></td>
+                  <td><span>Full Body</span></td><td><span>Rest</span></td><td><span>Full Body</span></td>
+                  <td><span>Rest</span></td><td><span>Full Body</span></td><td><span>Rest</span></td>
+                </tr>
+                <tr>
+                  <td><a href="WorkoutSplits.html" target="_blank"><strong>Upper/Lower Splits</strong></a></td>
+                  <td><span>Upper Body</span></td><td><span>Lower Body</span></td><td><span>Rest</span></td>
+                  <td><span>Upper Body</span></td><td><span>Lower Body</span></td><td><span>Rest</span></td>
+                </tr>
+                <tr>
+                  <td><a href="WorkoutSplits.html" target="_blank"><strong>Push-Pull-Legs</strong></a></td>
+                  <td><span>Push</span></td><td><span>Pull</span></td><td><span>Legs</span></td>
+                  <td><span>Push</span></td><td><span>Pull</span></td><td><span>Legs</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
       </div>
     </div>
   </section>
-
 
   <!-- CONTACT -->
   <section class="contact section" id="contact">
@@ -817,7 +1114,6 @@
             <button type="submit" class="form-control" id="submit-button" name="submit">Send Message</button>
           </form>
 
-          <!-- Inline feedback area -->
           <div id="contact-feedback" class="mt-3" aria-live="polite"></div>
         </div>
 
@@ -825,13 +1121,11 @@
         <div class="mx-auto mt-4 mt-lg-0 mt-md-0 col-lg-5 col-md-6 col-12">
           <h2 class="mb-4 text-white" data-aos="fade-up" data-aos-delay="600">Find <span style="color:#e02121;">gyms </span> near you</h2>
 
-          <!-- Searching progress bar -->
           <div id="scan-bar" class="scanbar" aria-hidden="true"></div>
 
           <div class="mb-3" data-aos="fade-up" data-aos-delay="700">
             <div class="suggest-wrap">
               <input id="location-input" type="text" class="form-control" placeholder="Search a place or address (optional)" aria-autocomplete="list" aria-expanded="false" aria-owns="suggest-box" aria-haspopup="listbox">
-              <!-- Suggestions -->
               <div id="suggest-box" class="suggest-box" role="listbox" aria-label="Location suggestions"></div>
             </div>
             <button id="search-btn" class="btn btn-dark btn-block mt-2" type="button" title="Search">Search</button>
@@ -847,7 +1141,6 @@
                 </select>
               </label>
 
-              <!-- Open-now filter (hidden if opening_hours unavailable) -->
               <div id="open-now-wrap" class="form-check ml-auto mb-2 d-none">
                 <input class="form-check-input" type="checkbox" id="open-now">
                 <label class="form-check-label text-light small" for="open-now">Open now</label>
@@ -868,16 +1161,61 @@
     </div>
   </section>
 
-  <!-- FOOTER -->
-  <footer class="py-4 mt-auto" style="border-top:1px solid rgba(255,255,255,.08); background:#0b0b0b;">
-    <div class="container d-flex flex-wrap align-items-center justify-content-between">
-      <div class="text-light small">© <span id="year"></span> COMRADES</div>
-      <div class="small">
-        <a class="text-light" href="privacy.html" target="_blank" rel="noopener">Privacy</a>
-        <span class="mx-2 text-muted">•</span>
-        <a class="text-light" href="terms.html" target="_blank" rel="noopener">Terms</a>
-      </div>
-    </div>
+  <!-- FOOTER with flickering neon names -->
+<!-- SAMPLE HTML -->
+<footer class="credit-wrap">
+  <!-- Hidden toggle -->
+  <input type="checkbox" id="creditLight" class="sr-only" aria-hidden="true">
+
+  <!-- The lamp button -->
+  <label class="lamp" for="creditLight" aria-label="Turn light on to reveal creators">
+    <span class="lamp-bulb" aria-hidden="true"></span>
+    <span class="lamp-switch">Light</span>
+  </label>
+
+  <!-- Names -->
+  <div class="credit-reveal" aria-live="polite">
+    <span class="by">by</span>
+    <span class="name">
+      <span class="initial">S</span>rikanth
+    </span>
+    <span class="and">&amp;</span>
+    <span class="name">
+      <span class="initial">R</span>ohith
+    </span>
+  </div>
+</footer>
+
+    <!-- year + split names into flickering chars -->
+    <script>
+      (function(){
+        var y = document.getElementById('year');
+        if (y) y.textContent = new Date().getFullYear();
+
+        // Split each name into spans with staggered delays
+        var names = document.querySelectorAll('footer .cn-name');
+        names.forEach(function(n){
+          var t = n.textContent.trim();
+          n.textContent = '';
+          Array.prototype.forEach.call(t, function(ch, i){
+            var s = document.createElement('span');
+            s.className = 'char';
+            s.style.setProperty('--i', i);
+            s.textContent = ch;
+            n.appendChild(s);
+          });
+        });
+
+        // Tap-to-flash on mobile
+        var pill = document.getElementById('creditNeon');
+        if (pill){
+          pill.addEventListener('click', function(){
+            pill.classList.add('flash');
+            setTimeout(function(){ pill.classList.remove('flash'); }, 500);
+          });
+        }
+      })();
+    </script>
   </footer>
 
   <!-- Scroll to top -->
@@ -885,16 +1223,10 @@
 
   <!-- Cookie banner -->
   <div id="cookie-banner" class="cookie-banner" role="dialog" aria-live="polite" aria-label="Cookie consent">
-    <div class="d-flex flex-column flex-md-row align-items-md-center">
-      <div class="flex-fill pr-md-3">
-        We use privacy-friendly analytics to improve the site. No ads. Read our
-        <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>.
-      </div>
       <div class="mt-3 mt-md-0">
         <button id="cookie-accept" class="btn btn-sm btn-light mr-2">Allow analytics</button>
         <button id="cookie-reject" class="btn btn-sm btn-outline-light">Decline</button>
       </div>
-    </div>
   </div>
 
   <!-- Modal -->
@@ -974,7 +1306,7 @@
     crossorigin=""
   ></script>
 
-  <!-- Map Finder + Animated meters + Futuristic animations + Searching bar + FAST SUGGESTIONS -->
+  <!-- Map Finder + Animated meters + Suggestions + Scanbar -->
   <script>
   (function(){
     /* ======= MAP: nearest gym finder ======= */
@@ -986,7 +1318,7 @@
     const radiusSel=document.getElementById('radius-select');
     const inputEl=document.getElementById('location-input');
     const suggestBox=document.getElementById('suggest-box');
-    const scanBar=document.getElementById('scan-bar'); // progress bar
+    const scanBar=document.getElementById('scan-bar');
     const openNowWrap=document.getElementById('open-now-wrap');
     const openNowCb=document.getElementById('open-now');
 
@@ -997,7 +1329,6 @@
       const markersLayer=L.layerGroup().addTo(map);
       let userMarker=null;
 
-      /* === Radius circle === */
       let radiusCircle=null;
       function drawRadius(lat, lon, meters){
         if (radiusCircle) { map.removeLayer(radiusCircle); }
@@ -1048,7 +1379,6 @@
         throw new Error('Overpass endpoints failed');
       }
 
-      /* === opening_hours: basic parser for common patterns === */
       const dayIdxToCode = ['Su','Mo','Tu','We','Th','Fr','Sa'];
       function parseTime(s){ const m=/^(\d{1,2}):?(\d{2})$/.exec(s); if(!m) return null; const h=+m[1], mi=+m[2]; return h*60+mi; }
       function expandDays(part){
@@ -1077,9 +1407,7 @@
           if(parts.length < 2) continue;
           const daySpec = [];
           let i=0;
-          while(i<parts.length && /^(Mo|Tu|We|Th|Fr|Sa|Su|,|-)+$/.test(parts[i].replace(/\s/g,''))){
-            daySpec.push(parts[i]); i++;
-          }
+          while(i<parts.length && /^(Mo|Tu|We|Th|Fr|Sa|Su|,|-)+$/.test(parts[i].replace(/\s/g,''))){ daySpec.push(parts[i]); i++; }
           const times = parts.slice(i).join(' ').split(',').map(x=>x.trim());
           const daysSet = expandDays(daySpec.join(' '));
           if(daysSet.size===0){ daysSet.add(0);daysSet.add(1);daysSet.add(2);daysSet.add(3);daysSet.add(4);daysSet.add(5);daysSet.add(6); }
@@ -1098,19 +1426,6 @@
         }
         return anyMatch ? false : null;
       }
-
-      /* === Magnetic hover for buttons === */
-      function magnetic(node){
-        const strength = 10; // px
-        node.addEventListener('mousemove', (e)=>{
-          const r = node.getBoundingClientRect();
-          const x = ((e.clientX - r.left) / r.width - 0.5) * 2;
-          const y = ((e.clientY - r.top)  / r.height - 0.5) * 2;
-          node.style.transform = `translate(${x*strength}px, ${y*strength}px)`;
-        });
-        node.addEventListener('mouseleave', ()=>{ node.style.transform = 'translate(0,0)'; });
-      }
-      const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
       function clearResults(){ markersLayer.clearLayers(); listEl.innerHTML=''; statusEl.textContent=''; }
 
@@ -1175,6 +1490,7 @@
           li.addEventListener('click',()=>map.flyTo([p.lat,p.lon],16));
           listEl.appendChild(li);
 
+          const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
           if (!reduceMotion) {
             const delay = i * 60;
             li.style.animation = `resultLift 420ms cubic-bezier(.2,.8,.2,1) both`;
@@ -1186,8 +1502,6 @@
             li.appendChild(after);
             setTimeout(()=>{ li.style.animation=''; li.style.animationDelay=''; after.remove(); }, delay+900);
           }
-
-          li.querySelectorAll('.btn').forEach(magnetic);
         });
 
         if(bounds.length){
@@ -1234,14 +1548,12 @@
         );
       });
 
-      // ====== FAST LOCATION SUGGESTIONS (Nominatim) ======
-      const cache = new Map(); // q -> results
+      /* SUGGESTIONS (Nominatim) */
+      const cache = new Map();
       let aborter = null;
       let activeIndex = -1;
 
-      function debounce(fn, ms){
-        let t; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args), ms); };
-      }
+      function debounce(fn, ms){ let t; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args), ms); }; }
       function hideSuggest(){
         suggestBox.classList.remove('show');
         inputEl.setAttribute('aria-expanded','false');
@@ -1276,13 +1588,7 @@
           if(a.state) parts.push(a.state);
           if(a.country) parts.push(a.country);
         }
-        return {
-          lat: parseFloat(r.lat),
-          lon: parseFloat(r.lon),
-          label: r.display_name,
-          title,
-          sub: parts.join(', ')
-        };
+        return { lat: parseFloat(r.lat), lon: parseFloat(r.lon), label: r.display_name, title, sub: parts.join(', ') };
       }
       async function searchPlaces(q){
         const key = q.toLowerCase().trim();
@@ -1304,18 +1610,15 @@
           const results = await searchPlaces(q);
           activeIndex = -1;
           renderSuggestions(results);
-        }catch(e){
-          if(e.name!=='AbortError') console.warn(e);
-        }
+        }catch(e){ if(e.name!=='AbortError') console.warn(e); }
       }, 150);
 
       inputEl && inputEl.addEventListener('input', doSuggest);
 
-      // Click selection
       suggestBox && suggestBox.addEventListener('mousedown', (e)=>{
         const item = e.target.closest('.suggest-item');
         if(!item) return;
-        e.preventDefault(); // prevent input blur
+        e.preventDefault();
         selectSuggestion(item);
       });
 
@@ -1329,7 +1632,6 @@
         runSearchFrom(lat, lon);
       }
 
-      // Keyboard navigation
       inputEl && inputEl.addEventListener('keydown', (e)=>{
         if(!suggestBox.classList.contains('show')) return;
         const items = Array.from(suggestBox.querySelectorAll('.suggest-item'));
@@ -1358,7 +1660,6 @@
       }
       inputEl && inputEl.addEventListener('blur', ()=> setTimeout(hideSuggest, 120));
 
-      // Simple geocode for manual Search button
       async function geocode(q){
         const url=`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1`;
         const res=await fetch(url,{ headers:{'Accept':'application/json'} });
@@ -1395,7 +1696,6 @@
         }
       });
 
-      // Quiet auto-locate on load
       window.addEventListener('load',()=>{
         if(location.protocol==='https:' && 'geolocation'in navigator){
           navigator.geolocation.getCurrentPosition(
@@ -1406,15 +1706,13 @@
       });
     }
 
-    /* ===== Scroll to top ===== */
+    /* Scroll to top */
     const toTop = document.getElementById('to-top');
     window.addEventListener('scroll', ()=>{
       if(window.scrollY > 320){ toTop.classList.add('show'); } else { toTop.classList.remove('show'); }
     });
     toTop.addEventListener('click', ()=> window.scrollTo({top:0, behavior:'smooth'}));
 
-    // Footer year
-    const yEl=document.getElementById('year'); if(yEl) yEl.textContent=new Date().getFullYear();
   })();
   </script>
 
@@ -1428,7 +1726,7 @@
     })();
   </script>
 
-  <!-- Typewriter: Telugu → (backspace) → Hindi → (backspace) → English → (backspace) -->
+  <!-- Typewriter: Telugu → Hindi → English -->
   <script>
     (function(){
       const el = document.getElementById('type-cycle');
@@ -1468,96 +1766,13 @@
     })();
   </script>
 
-  <!-- ABOUT meters: animate every time the section enters view -->
-  <script>
-    (function(){
-      const meters = [
-        { bar: document.getElementById('bar-success'),      pct: document.getElementById('pct-success'),      to: 100, duration: 1800 },
-        { bar: document.getElementById('bar-adherence'),    pct: document.getElementById('pct-adherence'),    to: 100, duration: 2000 },
-        { bar: document.getElementById('bar-satisfaction'), pct: document.getElementById('pct-satisfaction'), to: 100, duration: 2200 },
-      ];
-
-      const prefRed = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      function easeOutCubic(t){ return 1 - Math.pow(1 - t, 3); }
-
-      function resetMeter(m){
-        if(!m || !m.bar || !m.pct) return;
-        if(m._raf) cancelAnimationFrame(m._raf);
-        m._animating = false; m._raf = null;
-        m.bar.style.width = '0%';
-        m.pct.textContent = '0%';
-      }
-
-      function animateMeter(m){
-        if(!m || !m.bar || !m.pct) return;
-        if(m._animating) return;
-        m._animating = true;
-
-        if(prefRed){
-          m.bar.style.width = m.to + '%';
-          m.pct.textContent = m.to + '%';
-          m._animating = false;
-          return;
-        }
-
-        const start = performance.now();
-        const dur   = m.duration || 2000;
-
-        function step(now){
-          if(!m._animating) return; // cancelled
-          const t = Math.min(1, (now - start) / dur);
-          const v = Math.round(easeOutCubic(t) * m.to);
-          m.bar.style.width = v + '%';
-          m.pct.textContent = v + '%';
-          if(t < 1){
-            m._raf = requestAnimationFrame(step);
-          }else{
-            m._animating = false;
-            m._raf = null;
-          }
-        }
-        m._raf = requestAnimationFrame(step);
-      }
-
-      const aboutSection = document.getElementById('about');
-      if('IntersectionObserver' in window && aboutSection){
-        const io = new IntersectionObserver((entries)=>{
-          entries.forEach(e=>{
-            if(e.isIntersecting){
-              meters.forEach(m => { resetMeter(m); animateMeter(m); });
-            }else{
-              meters.forEach(resetMeter);
-            }
-          });
-        }, { threshold: 0.35 });
-        io.observe(aboutSection);
-      }else{
-        // Fallback: animate on load, then reset/animate as you scroll
-        meters.forEach(m => { resetMeter(m); animateMeter(m); });
-        window.addEventListener('scroll', ()=>{
-          const r = aboutSection.getBoundingClientRect();
-          const inView = r.top < innerHeight * 0.65 && r.bottom > innerHeight * 0.35;
-          if(inView){
-            if(!meters.some(m => m._animating || (m.bar && m.bar.style.width === (m.to + '%')))){
-              meters.forEach(m => { resetMeter(m); animateMeter(m); });
-            }
-          }else{
-            meters.forEach(resetMeter);
-          }
-        }, { passive:true });
-      }
-    })();
-  </script>
-
   <!-- Analytics (consent + DNT aware) -->
   <script>
     (function(){
-      // ===== CONFIG =====
       const ENABLE_ANALYTICS = true;
-      const ANALYTICS_PROVIDER = 'plausible';      // 'plausible' | 'ga4' | 'none'
-      const PLAUSIBLE_DOMAIN = 'example.com';      // <- change to your domain
-      const GA_MEASUREMENT_ID = 'G-XXXXXXXXXX';    // <- change if using GA4
-      // ==================
+      const ANALYTICS_PROVIDER = 'plausible';
+      const PLAUSIBLE_DOMAIN = 'example.com';
+      const GA_MEASUREMENT_ID = 'G-XXXXXXXXXX';
 
       const DNT = (navigator.doNotTrack=='1' || window.doNotTrack=='1' || navigator.msDoNotTrack=='1');
       const banner = document.getElementById('cookie-banner');
@@ -1608,6 +1823,71 @@
       });
     })();
   </script>
+
+  <!-- ==== CounterAPI V2: index-only counter ==== -->
+ <!-- Counter: CounterAPI v2 with CountAPI.xyz fallback -->
+<script type="module">
+  // ==== CONFIG (edit these 3 for CounterAPI v2) ====
+  const WORKSPACE = 'comrades';                 // your workspace slug
+  const COUNTER   = 'FitnessEnthusiasts';       // your counter slug
+  const TOKEN     = 'ut_DFPuGc2ZawbdnxmTspu1VZJ9hnR22iVkoAIjJueb'; // client-safe token
+
+  const nEl  = document.getElementById('view-count');
+  const pill = document.getElementById('view-pill');
+  const path = location.pathname || '/';
+  const last = path.split('/').pop();
+  const hasExt = /\.[a-z0-9]+$/i.test(last);
+  const onIndex = (last === '' || /^index\.html?$/i.test(last) || !hasExt);
+  const ns = (location.hostname || 'local') + '_site_views'; // fallback namespace key
+
+  function setCount(v){
+    if (!nEl) return;
+    nEl.textContent = Number(v ?? 0).toLocaleString();
+    if (pill){ pill.classList.add('glow'); setTimeout(()=>pill.classList.remove('glow'), 650); }
+  }
+
+  async function tryCounterApiV2(){
+    // Import the library dynamically so if it 404s we can still fall back.
+    const mod = await import('https://cdn.jsdelivr.net/npm/counterapi@latest/dist/index.esm.js');
+    const counter = new mod.Counter({ workspace: WORKSPACE, accessToken: TOKEN });
+
+    const res = onIndex ? await counter.up(COUNTER) : await counter.get(COUNTER);
+    setCount(res.value);
+
+    // After an increment, do a short refresh to defeat cache
+    if (onIndex) {
+      setTimeout(async () => {
+        try { const r2 = await counter.get(COUNTER); setCount(r2.value); } catch {}
+      }, 1200);
+    }
+  }
+
+  async function fallbackCountApiXyz(){
+    // namespace/key combo – persists globally without any token
+    const key = `${ns}`;
+    const base = 'https://api.countapi.xyz';
+    const url = onIndex
+      ? `${base}/hit/${encodeURIComponent(WORKSPACE)}/${encodeURIComponent(key)}`
+      : `${base}/get/${encodeURIComponent(WORKSPACE)}/${encodeURIComponent(key)}`;
+
+    const r = await fetch(url, { cache: 'no-store' });
+    if (!r.ok) throw new Error('fallback failed');
+    const j = await r.json();
+    setCount(j.value);
+  }
+
+  // Run: v2 → fallback
+  (async () => {
+    try {
+      await tryCounterApiV2();
+    } catch (e) {
+      console.warn('[counter] CounterAPI v2 failed, using fallback:', e);
+      try { await fallbackCountApiXyz(); }
+      catch(e2){ console.error('[counter] Fallback also failed:', e2); setCount(0); }
+    }
+  })();
+</script>
+
 
 </body>
 </html>
