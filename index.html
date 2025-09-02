@@ -734,6 +734,13 @@
   transition: width 900ms cubic-bezier(.2,.8,.2,1);
 }
 
+/* === Unit toggle === */
+#unit-toggle .btn { border:1px solid rgba(224,33,33,.5); }
+#unit-toggle .btn.active{
+  background: var(--accent);
+  border-color: var(--accent);
+  color:#fff;
+}
   </style>
 
 </head>
@@ -1161,6 +1168,12 @@
                 </select>
               </label>
 
+              <!-- Units toggle -->
+              <div class="btn-group btn-group-sm ml-2" role="group" aria-label="Units" id="unit-toggle">
+                <button type="button" class="btn btn-dark active" data-unit="km">km</button>
+                <button type="button" class="btn btn-dark" data-unit="mi">mi</button>
+              </div>
+
               <div id="open-now-wrap" class="form-check ml-auto mb-2 d-none">
                 <input class="form-check-input" type="checkbox" id="open-now">
                 <label class="form-check-label text-light small" for="open-now">Open now</label>
@@ -1339,6 +1352,31 @@
     const scanBar=document.getElementById('scan-bar');
     const openNowWrap=document.getElementById('open-now-wrap');
     const openNowCb=document.getElementById('open-now');
+    const unitToggle=document.getElementById('unit-toggle');
+
+    // Units: 'km' or 'mi' (UI default = km)
+    let unit = 'km';
+    // Keep last results so we can re-render on unit change without re-fetch
+    let lastElements = null;
+    let lastOrigin = null;
+
+    // helpers for unit conversion and labels
+    function metersToUnit(m){
+      return unit === 'km' ? (m / 1000) : (m / 1609.344);
+    }
+    function formatDistance(m){
+      return metersToUnit(m).toFixed(2) + ' ' + unit;
+    }
+    function refreshRadiusLabels(){
+      if(!radiusSel) return;
+      Array.from(radiusSel.options).forEach(opt=>{
+        const meters = parseInt(opt.value,10) || 0;
+        if(!meters) return;
+        opt.textContent = unit === 'km'
+          ? (meters/1000).toFixed(1) + ' km'
+          : (meters/1609.344).toFixed(1) + ' mi';
+      });
+    }
 
     if(mapEl){
       const map=L.map(mapEl,{zoomControl:true});
@@ -1477,7 +1515,7 @@
           const websiteLink=p.website?`<a href="${p.website}" target="_blank" rel="noopener">Website</a>`:'';
           const phoneText=p.phone?`📞 ${p.phone}`:'';
           const addrText=p.address?`📍 ${p.address}`:'';
-          const distText=(p.dist!=null)?`🧭 ${(p.dist/1000).toFixed(2)} km`:``;
+          const distText=(p.dist!=null)?`🧭 ${formatDistance(p.dist)}`:``;
           const openBadge = (p.openState===true) ? '🟢 Open' : (p.openState===false ? '🔴 Closed' : '');
 
           marker.bindPopup(
@@ -1496,7 +1534,7 @@
               <div>
                 <strong>${i+1}. ${p.name}</strong>
                 ${p.address?`<div class="small text-muted">${p.address}</div>`:''}
-                ${p.dist!=null?`<div class="small">~ ${(p.dist/1000).toFixed(2)} km</div>`:''}
+                ${p.dist!=null?`<div class="small">~ ${formatDistance(p.dist)}</div>`:''}
                 ${p.openState!==null?`<div class="small">${p.openState?'<span style="color:#34d058;">● Open now</span>':'<span style="color:#ff6b6b;">● Closed</span>'}</div>`:''}
                 ${p.oh?`<div class="small text-muted">Hours: ${p.oh}</div>`:''}
               </div>
@@ -1541,6 +1579,10 @@
           statusEl.classList.add('scanning');
           statusEl.textContent = 'Searching nearby gyms...';
           const elements=await fetchGyms(lat,lon,r);
+
+          // save last results so unit toggles can re-render
+          lastElements = elements;
+          lastOrigin = { lat, lng: lon };
 
           const hasOH = elements.some(el => el.tags && el.tags.opening_hours);
           openNowWrap.classList.toggle('d-none', !hasOH);
@@ -1714,12 +1756,39 @@
         }
       });
 
+      // Unit toggle wiring
+      if(unitToggle){
+        // set initial labels once
+        refreshRadiusLabels();
+        unitToggle.addEventListener('click', (e)=>{
+          const btn = e.target.closest('button[data-unit]');
+          if(!btn) return;
+          if(btn.classList.contains('active')) return;
+
+          unit = btn.dataset.unit;
+          unitToggle.querySelectorAll('button').forEach(b=>{
+            b.classList.toggle('active', b === btn);
+          });
+
+          // update radius labels
+          refreshRadiusLabels();
+
+          // re-render current results (no refetch) if available
+          if(lastElements && lastOrigin){
+            renderResults(lastElements, lastOrigin, openNowCb && openNowCb.checked);
+          }
+        });
+      }
+
       window.addEventListener('load',()=>{
         if(location.protocol==='https:' && 'geolocation'in navigator){
           navigator.geolocation.getCurrentPosition(
             pos=>{ const {latitude,longitude}=pos.coords; setUserLocation(latitude,longitude); runSearchFrom(latitude,longitude); },
             ()=>{}, { enableHighAccuracy:true, timeout:7000 }
           );
+        } else {
+          // still make sure radius labels are correct on load without geolocation
+          refreshRadiusLabels();
         }
       });
     }
